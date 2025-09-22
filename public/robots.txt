@@ -1,0 +1,58 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.malnukananga.sch.id/sitemap.xml
+
+# RSS Feed
+Sitemap: https://www.malnukananga.sch.id/api/rss
+
+# Host
+Host: https://www.malnukananga.sch.id
+
+# Crawl-delay
+Crawl-delay: 10
+
+# Directories
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+
+# File extensions
+Disallow: /*.pdf$
+Disallow: /*.doc$
+Disallow: /*.docx$
+Disallow: /*.xls$
+Disallow: /*.xlsx$
+
+# Specific files
+Disallow: /private/
+Disallow: /tmp/
+Disallow: /backup/
+
+# Parameters
+Disallow: /*?*
+Allow: /*?$
+
+# Google AdsBot
+User-agent: AdsBot-Google
+Allow: /
+
+# Googlebot-Image
+User-agent: Googlebot-Image
+Allow: /
+
+# Bingbot
+User-agent: bingbot
+Crawl-delay: 10
+
+# Yandex
+User-agent: Yandex
+Crawl-delay: 10
+
+# Social media crawlers
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
