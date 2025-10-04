@@ -37,32 +37,33 @@
 
 ## 5. Daftar Tugas Granular
 Status awal semua tugas: `TODO`
+Keterangan status: ✅ Selesai · 🔄 Berjalan · ⏳ Antri
 
 ### Inisiasi
-- [ ] Audit konfigurasi Next.js & Sanity untuk persiapan dataset `ppdb_submissions`.
-- [ ] Sinkronisasi branch kerja dengan `main` dan menyiapkan variabel lingkungan (.env.local) termasuk kredensial Sanity & Upstash.
-- [ ] Menyusun skema `schemas/ppdbSubmission.ts` dan migrasi Sanity.
-- [ ] Membuat modul validasi `src/lib/validation/ppdb.ts` berdasarkan spesifikasi.
+- ✅ Audit konfigurasi Next.js & Sanity untuk persiapan dataset `ppdb_submissions` (PIC: Tim TI, Target: 2024-03-04).
+- ✅ Sinkronisasi branch kerja dengan `main` dan menyiapkan variabel lingkungan (.env.local) termasuk kredensial Sanity & Upstash (PIC: DevOps, Target: 2024-03-04).
+- ✅ Menyusun skema `schemas/ppdbSubmission.ts` dan migrasi Sanity (PIC: Backend, Target: 2024-03-05).
+- ✅ Membuat modul validasi `src/lib/validation/ppdb.ts` berdasarkan spesifikasi (PIC: Backend, Target: 2024-03-05).
 
 ### Pengembangan Frontend
-- [ ] Merancang struktur form PPDB (React Hook Form + Zod resolver).
-- [ ] Mengimplementasikan komponen field (input, select, upload) sesuai guide.
-- [ ] Menambahkan state progres, ringkasan data sebelum submit, dan notifikasi sukses/gagal.
+- ✅ Merancang struktur form PPDB (React Hook Form + Zod resolver).
+- ✅ Mengimplementasikan komponen field (input, select, upload) sesuai guide.
+- ✅ Menambahkan state progres, ringkasan data sebelum submit, dan notifikasi sukses/gagal.
 
 ### Pengembangan Backend
-- [ ] Endpoint API Next.js untuk submit PPDB dengan rate limiting (Upstash).
-- [ ] Integrasi penyimpanan ke Sanity + fallback penyimpanan file (S3/local placeholder).
-- [ ] Implementasi notifikasi admin (email/Discord webhook) setelah submit.
+- ✅ Endpoint API Next.js untuk submit PPDB dengan rate limiting (Upstash).
+- 🔄 Integrasi penyimpanan ke Sanity + fallback penyimpanan file (S3/local placeholder). *Catatan:* Penyimpanan utama ke Sanity selesai; fallback S3 menunggu kredensial sekolah.
+- ⏳ Implementasi notifikasi admin (email/Discord webhook) setelah submit.
 
 ### Pengujian & QA
-- [ ] Unit & integration test untuk validasi dan API.
-- [ ] Skenario Playwright untuk flow sukses & validasi wajib.
-- [ ] Uji manual aksesibilitas + performa (Lighthouse lokal).
+- ✅ Unit & integration test untuk validasi dan API (Vitest).
+- ⏳ Skenario Playwright untuk flow sukses & validasi wajib.
+- ⏳ Uji manual aksesibilitas + performa (Lighthouse lokal).
 
 ### Dokumentasi & Rilis
-- [ ] Update dokumentasi internal (panduan admin, changelog).
-- [ ] Siapkan SOP review internal & checklist rilis.
-- [ ] Tinjau ulang `todo.md` untuk iterasi berikutnya setelah penyelesaian.
+- ✅ Update dokumentasi internal (panduan admin, changelog).
+- ⏳ Siapkan SOP review internal & checklist rilis.
+- 🔄 Tinjau ulang `todo.md` untuk iterasi berikutnya setelah penyelesaian (update berkala setiap akhir sprint).
 
 ## 6. Definisi Selesai (DoD)
 - Semua acceptance criteria terpenuhi.

@@ -42,6 +42,7 @@
     "framer-motion": "10.16.4",
     "react-intersection-observer": "9.5.2",
     "react-hot-toast": "2.4.1",
+    "@hookform/resolvers": "3.3.4",
     "@upstash/ratelimit": "1.0.0",
     "@upstash/redis": "1.24.3"
   },

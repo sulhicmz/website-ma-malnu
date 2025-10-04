@@ -7,6 +7,7 @@ import prestasi from './prestasi'
 import faq from './faq'
 import siteSettings from './siteSettings'
 import ppdbSettings from './ppdbSettings'
+import ppdbSubmission from './ppdbSubmission'
 
 // Additional supporting schemas that might be needed
 import kategori from './kategori'
@@ -22,6 +23,7 @@ export const schemaTypes = [
   faq,
   siteSettings,
   ppdbSettings,
+  ppdbSubmission,
   kategori,
   penulis,
   page,
