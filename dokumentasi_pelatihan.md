@@ -414,6 +414,32 @@ Durasi: 3 detik
 - **Error Log**: Monitor error sistem
 - **Feedback**: Kumpulkan masukan pengguna
 
+## Panduan Pengelolaan Form PPDB Online
+
+### 1. Akses Data Pendaftar di Sanity
+1. Buka studio Sanity dan pilih dataset `ppdbSubmission` pada menu kiri.
+2. Setiap entri baru berstatus **Baru**. Gunakan filter status untuk memisahkan data yang sudah diverifikasi.
+3. Klik dokumen untuk melihat detail lengkap, termasuk nilai UN dan data orang tua/wali.
+4. Bagian "Dokumen Unggahan" menampilkan file yang dikirim pendaftar; klik tombol unduh untuk menyimpan salinan lokal.
+
+### 2. Alur Verifikasi Internal
+- **PIC**: Tim Admin PPDB.
+- **Langkah**:
+  1. Periksa kelengkapan data dan kecocokan dokumen.
+  2. Ubah field **Status Verifikasi** ke "Diverifikasi" bila data valid atau "Ditolak" bila perlu revisi.
+  3. Catat alasan penolakan di kolom catatan internal (gunakan komentar Sanity).
+  4. Unduh data dalam format CSV menggunakan fitur export Sanity sebelum rapat seleksi.
+
+### 3. Notifikasi & Tindak Lanjut
+- Tambahkan admin ke webhook/automation (Zapier/Make) untuk mengirim pesan ke email atau WhatsApp ketika status berubah.
+- Template pesan tindak lanjut minimal memuat: nama siswa, NISN, status verifikasi, dan jadwal tes.
+- Bila perlu revisi dokumen, arahkan pendaftar untuk login kembali dan mengirim data lewat kanal resmi (email PPDB).
+
+### 4. Arsip & Keamanan Data
+- Simpan dokumen penting pada storage internal sekolah dengan hak akses terbatas.
+- Jalankan proses backup mingguan untuk dataset PPDB melalui `sanity dataset export`.
+- Hapus data pendaftar yang tidak melanjutkan setelah tahun ajaran baru dimulai sesuai kebijakan privasi.
+
 ## Kontak Support
 
 ### Tim Internal
