@@ -1,77 +1,82 @@
 # Website MA Malnu Kananga
 
-Website resmi Madrasah Aliyah Malnu Kananga dibangun dengan Next.js 14 App Router dan Sanity CMS.
+Repositori ini berisi kode sumber website resmi MA Malnu Kananga yang dibangun dengan Next.js 14 App Router, Tailwind CSS, dan integrasi Sanity CMS untuk pengelolaan konten.
 
-## Fitur
+## Ringkasan Proyek
 
-- Server Components untuk data fetching
-- Static Site Generation (SSG) dan Incremental Static Regeneration (ISR)
-- Dynamic routes untuk konten halaman
-- SEO optimization dengan generateMetadata
-- Error handling dengan error.tsx
-- Responsive design dengan Tailwind CSS
+- **Framework**: Next.js 14 dengan App Router dan dukungan Server Components untuk fetching data dan revalidasi konten periodik.
+- **Bahasa**: TypeScript dan JavaScript (beberapa komponen warisan masih menggunakan `.jsx`).
+- **Styling**: Tailwind CSS dengan konfigurasi token desain dan komponen antarmuka siap pakai.
+- **Konten**: Terhubung dengan Sanity CMS untuk mengelola berita, pengumuman, guru, halaman statis, dan pengaturan situs.
+- **SEO & Analitik**: Utilitas SEO modular, dukungan JSON-LD, dan integrasi Google Tag Manager.
 
-## Teknologi
-
-- [Next.js 14](https://nextjs.org/) - Framework React
-- [Sanity CMS](https://www.sanity.io/) - Content Management System
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
-
-## Struktur Direktori
+## Struktur Direktori Utama
 
 ```
-src/
-├── app/                 # App Router pages
-│   ├── [slug]/          # Dynamic pages
-│   ├── berita/          # News section
-│   ├── guru-staf/       # Teachers and staff section
-│   ├── pengumuman/      # Announcements section
-│   ├── profil/          # School profile section
-│   └── ppdb/            # Student registration section
-├── components/          # React components
-├── lib/                 # Utility functions and Sanity client
-└── schemas/             # Sanity schemas
+.
+├── app/                      # Halaman beranda prototipe dengan komponen TypeScript modern
+├── components/               # Desain sistem baru (layout, sections, ui) berbasis TypeScript
+├── src/
+│   ├── app/                  # Implementasi halaman utama terintegrasi Sanity (layout, error, sitemap)
+│   ├── components/           # Komponen produksi (JSX) + utilitas SEO & analitik
+│   └── lib/                  # Client Sanity, query GROQ, helper SEO & GTM
+├── schemas/                  # Skema konten Sanity (berita, guru, siteSettings, dsb.)
+├── public/                   # Aset statis (ikon, gambar OG, dsb.)
+├── scripts/                  # Dokumentasi skrip tambahan
+└── dokumentasi_*.md          # Dokumen perancangan fitur dan panduan internal
 ```
 
-## Instalasi
+> Catatan: Direktori `app/` menyajikan variasi halaman beranda berbasis komponen desain terbaru, sedangkan `src/app/` memuat implementasi yang tersambung ke Sanity CMS lengkap dengan layout, error handling, dan SEO utilitas.
 
-1. Clone repository ini
-2. Install dependencies:
+## Alur Data & Konten
+
+1. **Client Sanity** — `src/lib/sanity.ts` mengonfigurasi `sanityClient` dan helper gambar menggunakan kredensial lingkungan (`NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`, `SANITY_API_TOKEN`).
+2. **Query GROQ** — `src/lib/queries.ts` mendefinisikan query untuk site settings, halaman statis, berita, guru, dan pengumuman.
+3. **Lapisan Fetching** — `src/lib/fetchData.ts` mengekspos fungsi async yang dipakai oleh Server Components (`src/app/page.tsx`) serta mendukung revalidasi (ISR) melalui konstanta `REVALIDATION_TIME`.
+4. **Render Halaman** — `src/app/page.tsx` menyiapkan metadata dinamis, mengambil daftar konten dari Sanity, dan merender komponen kartu/galleries.
+5. **Skema CMS** — Direktori `schemas/` menjaga konsistensi struktur konten antara situs dan studio Sanity.
+
+## SEO & Analitik
+
+- `src/lib/seo.ts` menyediakan konfigurasi SEO default dan mapping metadata untuk berbagai halaman utama.
+- Direktori `src/components/seo/` berisi komponen `MetaTags`, `OrganizationJSONLD`, `NewsArticleJSONLD`, dan `BreadcrumbJSONLD` untuk memasukkan meta tag serta structured data.
+- `src/components/GoogleTagManager.tsx` menanamkan skrip GTM (hanya aktif di production) dan melacak pageview berdasarkan path Next.js.
+- `src/lib/gtm.ts` serta `src/components/WhatsAppButton.tsx` menunjukkan contoh pelacakan event kustom (mis. klik tombol WhatsApp atau submit PPDB).
+
+## Menjalankan Proyek
+
+1. **Instalasi Dependensi**
    ```bash
    npm install
    ```
-3. Salin file `.env.example` menjadi `.env.local` dan isi dengan konfigurasi Sanity Anda
-4. Jalankan development server:
+2. **Variabel Lingkungan**
+   - `NEXT_PUBLIC_SANITY_PROJECT_ID`
+   - `NEXT_PUBLIC_SANITY_DATASET`
+   - `SANITY_API_TOKEN`
+   - `NEXT_PUBLIC_GTM_ID` (opsional, untuk Google Tag Manager)
+   Simpan pada `.env.local` sebelum menjalankan aplikasi.
+3. **Pengembangan**
    ```bash
    npm run dev
    ```
+4. **Build Produksi & Preview**
+   ```bash
+   npm run build
+   npm start
+   ```
 
-## Pengembangan
+## Pemeriksaan Kualitas
 
-### Menambahkan Halaman Baru
+- `npm run lint` — menjalankan ESLint.
+- `npm run type-check` — memastikan konsistensi TypeScript.
+- `npm run test` — menjalankan Vitest unit test.
+- `npm run test:e2e` — menjalankan Playwright end-to-end test.
+- `npm run format` — memformat kode menggunakan Prettier (termasuk plugin Tailwind).
 
-1. Buat file baru di `src/app/` dengan format `[nama-halaman]/page.tsx`
-2. Tambahkan fungsi `generateMetadata` untuk SEO
-3. Gunakan `revalidate` untuk mengatur cache
-4. Tambahkan `error.tsx` untuk error handling
+## Sumber Dokumentasi Internal
 
-### Menambahkan Komponen
-
-1. Buat file komponen di `src/components/`
-2. Export komponen di `src/components/index.js`
-3. Gunakan komponen di halaman dengan `import { NamaKomponen } from '@/components/NamaKomponen'`
-
-## Deploy
-
-Untuk deploy ke Vercel:
-
-1. Push ke GitHub
-2. Buat project baru di Vercel
-3. Hubungkan dengan repository GitHub
-4. Tambahkan environment variables di pengaturan Vercel
-5. Deploy!
+Repositori ini menyertakan puluhan dokumen konseptual (mis. `branding_guide.md`, `pengujian_qa.md`, `wireframe_ux_design.md`) yang menjabarkan strategi brand, copywriting, desain, dan QA. Gunakan dokumen tersebut sebagai referensi ketika menambah fitur baru atau menyesuaikan konten.
 
 ## Lisensi
 
-MIT License
+MIT License.
