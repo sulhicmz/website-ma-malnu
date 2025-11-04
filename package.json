@@ -17,7 +17,12 @@
 "sanity:dev": "sanity dev",
     "sanity:build": "sanity build",
     "sanity:deploy": "sanity deploy",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build",
+    "build:analyze": "ANALYZE=true next build",
+    "lighthouse": "lhci autorun",
+    "accessibility": "pa11y-ci --sitemap http://localhost:3000/sitemap.xml",
+    "security:audit": "npm audit --audit-level moderate",
+    "performance:check": "npm run build && npm run analyze"
   },
   "dependencies": {
     "next": "14.0.0",

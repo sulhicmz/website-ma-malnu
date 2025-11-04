@@ -1,0 +1,26 @@
+{
+  "defaults": {
+    "chromeLaunchConfig": {
+      "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+    },
+    "concurrency": 4,
+    "includeWarnings": true,
+    "logLevel": "info",
+    "screenCapture": {
+      "enabled": true,
+      "pathPattern": "./accessibility-screenshots/{url}-{timestamp}.png"
+    }
+  },
+  "urls": [
+    "http://localhost:3000",
+    "http://localhost:3000/berita",
+    "http://localhost:3000/galeri",
+    "http://localhost:3000/ppdb",
+    "http://localhost:3000/kontak",
+    "http://localhost:3000/profil"
+  ],
+  "threshold": 3,
+  "ignore": [
+    "WCAG2AA.Principle1.Guideline1_3.1_3_1.H44.NonExistent"
+  ]
+}

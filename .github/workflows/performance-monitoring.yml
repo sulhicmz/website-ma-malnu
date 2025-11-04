@@ -1,0 +1,137 @@
+name: Performance Monitoring
+
+on:
+  schedule:
+    # Run every day at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      run_lighthouse:
+        description: 'Run Lighthouse tests'
+        required: false
+        default: 'true'
+      run_accessibility:
+        description: 'Run accessibility tests'
+        required: false
+        default: 'true'
+
+jobs:
+  performance-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+      
+    - name: Install performance tools
+      run: |
+        npm install -g @lhci/cli@0.12.x
+        npm install -g @next/bundle-analyzer
+        npm install -g pa11y-ci
+        npm install --save-dev @next/bundle-analyzer
+        
+    - name: Build project
+      run: npm run build
+      
+    - name: Start production server
+      run: |
+        npm start &
+        sleep 20
+        
+    - name: Run Lighthouse CI
+      if: github.event.inputs.run_lighthouse == 'true' || github.event.inputs.run_lighthouse == ''
+      run: lhci autorun --config=lighthouserc.js
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        
+    - name: Run accessibility tests
+      if: github.event.inputs.run_accessibility == 'true' || github.event.inputs.run_accessibility == ''
+      run: |
+        pa11y-ci --sitemap http://localhost:3000/sitemap.xml --threshold 3 || true
+        
+    - name: Bundle analysis
+      run: npm run analyze
+      continue-on-error: true
+      
+    - name: Generate performance report
+      run: |
+        echo "# Performance Report" > performance-report.md
+        echo "Generated on: $(date)" >> performance-report.md
+        echo "" >> performance-report.md
+        echo "## Lighthouse Results" >> performance-report.md
+        if [ -f ".lighthouseci/lhr-report.json" ]; then
+          echo "- Lighthouse report generated" >> performance-report.md
+        fi
+        echo "" >> performance-report.md
+        echo "## Bundle Analysis" >> performance-report.md
+        if [ -d ".next/analyze" ]; then
+          echo "- Bundle analysis completed" >> performance-report.md
+        fi
+        
+    - name: Upload performance artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-report-${{ github.run_number }}
+        path: |
+          .lighthouseci/
+          .next/analyze/
+          performance-report.md
+        
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          if (fs.existsSync('performance-report.md')) {
+            const report = fs.readFileSync('performance-report.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🚀 Performance Analysis Results\n\n${report}`
+            });
+          }
+
+  bundle-size-tracking:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+      
+    - name: Build and analyze bundle
+      run: |
+        npm install --save-dev @next/bundle-analyzer
+        ANALYZE=true npm run build
+        
+    - name: Check bundle size
+      run: |
+        echo "## Bundle Size Analysis" >> bundle-size.txt
+        echo "Generated on: $(date)" >> bundle-size.txt
+        echo "" >> bundle-size.txt
+        find .next/static/chunks -name "*.js" -exec ls -lh {} \; | head -20 >> bundle-size.txt
+        
+    - name: Upload bundle size report
+      uses: actions/upload-artifact@v4
+      with:
+        name: bundle-size-${{ github.run_number }}
+        path: bundle-size.txt
