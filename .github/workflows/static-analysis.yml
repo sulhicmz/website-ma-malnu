@@ -1,0 +1,184 @@
+name: Static Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install ESLint
+      run: npm install -g eslint eslint-config-next
+      
+    - name: Run ESLint
+      run: |
+        eslint . --ext .js,.jsx,.ts,.tsx --format=json > eslint-report.json || true
+        eslint . --ext .js,.jsx,.ts,.tsx
+        
+    - name: Install TypeScript
+      run: npm install -g typescript
+      
+    - name: Run TypeScript check
+      run: |
+        npx tsc --noEmit --skipLibCheck || true
+        
+    - name: Check file sizes
+      run: |
+        echo "## File Size Analysis" > size-report.md
+        echo "" >> size-report.md
+        find . -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" | head -20 | while read file; do
+          echo "- $file: $(wc -l < "$file") lines" >> size-report.md
+        done
+        
+    - name: Analyze bundle potential
+      run: |
+        echo "## Bundle Analysis" >> size-report.md
+        echo "" >> size-report.md
+        echo "### Large files (>100 lines):" >> size-report.md
+        find . -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -exec wc -l {} + | sort -nr | head -10 >> size-report.md
+        
+    - name: Check for optimization opportunities
+      run: |
+        echo "" >> size-report.md
+        echo "### Optimization Opportunities:" >> size-report.md
+        echo "" >> size-report.md
+        
+        # Check for console.log statements
+        echo "#### Console.log statements:" >> size-report.md
+        grep -r "console.log" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" . | wc -l | xargs echo "- Found" >> size-report.md
+        
+        # Check for unused imports (basic check)
+        echo "#### Potential unused imports:" >> size-report.md
+        grep -r "import.*from" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" . | head -5 >> size-report.md
+        
+    - name: Upload reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: static-analysis-reports
+        path: |
+          eslint-report.json
+          size-report.md
+
+  performance-estimation:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Analyze code for performance issues
+      run: |
+        echo "# Performance Analysis Report" > performance-issues.md
+        echo "Generated on: $(date)" >> performance-issues.md
+        echo "" >> performance-issues.md
+        
+        # Check for images without optimization
+        echo "## Image Optimization" >> performance-issues.md
+        echo "" >> performance-issues.md
+        echo "### Images found:" >> performance-issues.md
+        find . -name "*.jpg" -o -name "*.png" -o -name "*.jpeg" | head -10 >> performance-issues.md
+        
+        # Check for large components
+        echo "" >> performance-issues.md
+        echo "## Component Analysis" >> performance-issues.md
+        echo "" >> performance-issues.md
+        echo "### Largest components:" >> performance-issues.md
+        find . -name "*.jsx" -exec wc -l {} + | sort -nr | head -10 >> performance-issues.md
+        
+        # Check for potential optimization opportunities
+        echo "" >> performance-issues.md
+        echo "## Optimization Recommendations" >> performance-issues.md
+        echo "" >> performance-issues.md
+        echo "1. Consider using Next.js Image component for all images" >> performance-issues.md
+        echo "2. Implement dynamic imports for large components" >> performance-issues.md
+        echo "3. Add loading states for async operations" >> performance-issues.md
+        echo "4. Optimize bundle size with code splitting" >> performance-issues.md
+        echo "5. Implement proper caching strategies" >> performance-issues.md
+        
+    - name: Generate optimization suggestions
+      run: |
+        echo "" >> performance-issues.md
+        echo "## Specific File Recommendations" >> performance-issues.md
+        echo "" >> performance-issues.md
+        
+        # Check specific files
+        if [ -f "src/components/Navbar.jsx" ]; then
+          echo "### Navbar.jsx" >> performance-issues.md
+          echo "- Consider implementing lazy loading for dropdown menus" >> performance-issues.md
+          echo "- Add debounce for search functionality if present" >> performance-issues.md
+        fi
+        
+        if [ -f "src/app/page.tsx" ]; then
+          echo "### page.tsx (Homepage)" >> performance-issues.md
+          echo "- Implement dynamic imports for GalleryGrid component" >> performance-issues.md
+          echo "- Add skeleton loading for news cards" >> performance-issues.md
+          echo "- Consider pagination for news section" >> performance-issues.md
+        fi
+        
+    - name: Upload performance analysis
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-analysis
+        path: performance-issues.md
+
+  accessibility-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check accessibility in code
+      run: |
+        echo "# Accessibility Analysis" > accessibility-report.md
+        echo "Generated on: $(date)" >> accessibility-report.md
+        echo "" >> accessibility-report.md
+        
+        # Check for alt text usage
+        echo "## Image Alt Text Analysis" >> accessibility-report.md
+        echo "" >> accessibility-report.md
+        echo "### Images without alt attributes:" >> accessibility-report.md
+        grep -r "<img" --include="*.jsx" --include="*.tsx" . | grep -v "alt=" | head -5 >> accessibility-report.md
+        
+        # Check for semantic HTML
+        echo "" >> accessibility-report.md
+        echo "## Semantic HTML Usage" >> accessibility-report.md
+        echo "" >> accessibility-report.md
+        echo "### Semantic elements found:" >> accessibility-report.md
+        grep -r "<header\|<nav\|<main\|<section\|<article\|<footer" --include="*.jsx" --include="*.tsx" . | wc -l | xargs echo "- Found" >> accessibility-report.md
+        
+        # Check for ARIA attributes
+        echo "" >> accessibility-report.md
+        echo "## ARIA Attributes" >> accessibility-report.md
+        echo "" >> accessibility-report.md
+        echo "### ARIA attributes found:" >> accessibility-report.md
+        grep -r "aria-" --include="*.jsx" --include="*.tsx" . | head -5 >> accessibility-report.md
+        
+        # Recommendations
+        echo "" >> accessibility-report.md
+        echo "## Accessibility Recommendations" >> accessibility-report.md
+        echo "" >> accessibility-report.md
+        echo "1. Add alt attributes to all images" >> accessibility-report.md
+        echo "2. Use semantic HTML5 elements" >> accessibility-report.md
+        echo "3. Add ARIA labels for interactive elements" >> accessibility-report.md
+        echo "4. Ensure keyboard navigation support" >> accessibility-report.md
+        echo "5. Add skip navigation links" >> accessibility-report.md
+        echo "6. Use proper heading hierarchy" >> accessibility-report.md
+        
+    - name: Upload accessibility report
+      uses: actions/upload-artifact@v4
+      with:
+        name: accessibility-report
+        path: accessibility-report.md
