@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer'
 import GoogleTagManager from '@/components/GoogleTagManager'
 import { ErrorBoundary } from '@/components/ui/LoadingStates'
 import { register } from '@/lib/serviceWorker'
+import PerformanceMonitor from '@/components/PerformanceMonitor'
 
 // Optimized font loading
 const inter = Inter({ 
@@ -66,10 +67,11 @@ export default function RootLayout({
           Skip to main content
         </a>
         
-        <ErrorBoundary>
+<ErrorBoundary>
           <Navbar />
           <main id="main-content">{children}</main>
           <Footer />
+          <PerformanceMonitor />
         </ErrorBoundary>
       </body>
     </html>

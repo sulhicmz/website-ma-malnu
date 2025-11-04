@@ -1,7 +1,0 @@
-{
-  "source": {
-    "branch": "main",
-    "path": "/docs"
-  },
-  "build_type": "legacy"
-}
