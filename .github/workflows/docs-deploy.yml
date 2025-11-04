@@ -1,0 +1,106 @@
+name: Deploy Documentation to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'docs/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'docs/**' ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Build documentation
+        run: |
+          # Create index.html from README.md
+          mkdir -p _site
+          cp docs/README.md _site/
+          
+          # Generate simple HTML wrapper
+          cat > _site/index.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MA Malnu - Documentation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+        .markdown-body { box-sizing: border-box; min-width: 200px; max-width: 980px; margin: 0 auto; }
+        .markdown-body h1 { border-bottom: 1px solid #d1d9e0; padding-bottom: 0.3em; }
+        .markdown-body h2 { border-bottom: 1px solid #d1d9e0; padding-bottom: 0.3em; }
+        .markdown-body code { background: #f6f8fa; border-radius: 3px; font-size: 85%; padding: 0.2em 0.4em; }
+        .markdown-body pre { background: #f6f8fa; border-radius: 6px; padding: 16px; overflow: auto; }
+        .markdown-body blockquote { border-left: 4px solid #d1d9e0; padding: 0 16px; color: #656d76; }
+        .markdown-body table { border-collapse: collapse; width: 100%; }
+        .markdown-body th, .markdown-body td { border: 1px solid #d1d9e0; padding: 6px 13px; }
+        .markdown-body th { background: #f6f8fa; }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+EOF
+          
+          # Convert markdown to basic HTML (simple conversion)
+          node -e "
+          const fs = require('fs');
+          const content = fs.readFileSync('_site/README.md', 'utf8');
+          let html = content
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+            .replace(/^\*(.*)\*/gim, '<em>$1</em>')
+            .replace(/^\- (.*$)/gim, '<li>$1</li>')
+            .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>')
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/^\d+\. (.*$)/gim, '<ol><li>$1</li></ol>')
+            .replace(/<li>/g, '<ul><li>')
+            .replace(/<\/li>/g, '</li></ul>')
+            .replace(/<\/ul><ul>/g, '')
+            .replace(/<\/ol><ol>/g, '')
+            .replace(/^(?!<[h|p|u|o|c])/gim, '<p>')
+            .replace(/(?<!>)$/gim, '</p>');
+          console.log(html);
+          " >> _site/index.html
+          
+          cat >> _site/index.html << 'EOF'
+    </div>
+</body>
+</html>
+EOF
+          
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
