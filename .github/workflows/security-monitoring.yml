@@ -1,0 +1,175 @@
+name: Security Monitoring and Alerts
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  security-monitoring:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+      
+    - name: Generate SBOM (Software Bill of Materials)
+      run: |
+        npm install -g @cyclonedx/cdxgen
+        cdxgen . -o sbom.json
+        
+    - name: Analyze dependencies for security risks
+      run: |
+        echo "# Security Monitoring Report" > security-monitoring.md
+        echo "Generated on: $(date)" >> security-monitoring.md
+        echo "" >> security-monitoring.md
+        
+        # Check for high-risk dependencies
+        echo "## High-Risk Dependencies" >> security-monitoring.md
+        echo "" >> security-monitoring.md
+        npm audit --json > audit.json
+        cat audit.json | jq -r '.vulnerabilities | to_entries[] | select(.value.severity == "high" or .value.severity == "critical") | "- \(.key): \(.value.severity) - \(.value.title)"' >> security-monitoring.md || echo "- No high or critical vulnerabilities found" >> security-monitoring.md
+        
+        # Check for outdated packages
+        echo "" >> security-monitoring.md
+        echo "## Outdated Packages" >> security-monitoring.md
+        echo "" >> security-monitoring.md
+        npm outdated --json > outdated.json || true
+        if [ -f outdated.json ]; then
+          cat outdated.json | jq -r 'to_entries[] | "- \(.key): current=\(.value.current), latest=\(.value.latest)"' >> security-monitoring.md || echo "- No outdated packages found" >> security-monitoring.md
+        fi
+        
+    - name: Check for security best practices
+      run: |
+        echo "" >> security-monitoring.md
+        echo "## Security Best Practices Check" >> security-monitoring.md
+        echo "" >> security-monitoring.md
+        
+        # Check for environment variables usage
+        echo "### Environment Variables" >> security-monitoring.md
+        if grep -r "process.env" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" . | grep -v node_modules > /dev/null; then
+          echo "✅ Environment variables are being used" >> security-monitoring.md
+        else
+          echo "⚠️ Consider using environment variables for configuration" >> security-monitoring.md
+        fi
+        
+        # Check for HTTPS usage
+        echo "" >> security-monitoring.md
+        echo "### HTTPS Usage" >> security-monitoring.md
+        if grep -r "https://" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" . | grep -v node_modules > /dev/null; then
+          echo "✅ HTTPS URLs found" >> security-monitoring.md
+        else
+          echo "⚠️ Ensure all external connections use HTTPS" >> security-monitoring.md
+        fi
+        
+        # Check for security headers
+        echo "" >> security-monitoring.md
+        echo "### Security Headers" >> security-monitoring.md
+        if grep -r "helmet\|X-Frame-Options\|X-Content-Type-Options" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" . | grep -v node_modules > /dev/null; then
+          echo "✅ Security headers implemented" >> security-monitoring.md
+        else
+          echo "⚠️ Consider implementing security headers" >> security-monitoring.md
+        fi
+        
+    - name: Generate security score
+      run: |
+        echo "" >> security-monitoring.md
+        echo "## Security Score" >> security-monitoring.md
+        echo "" >> security-monitoring.md
+        
+        # Calculate security score
+        HIGH_VULNS=$(cat audit.json | jq '.vulnerabilities | to_entries[] | select(.value.severity == "high") | .key' | wc -l || echo 0)
+        CRITICAL_VULNS=$(cat audit.json | jq '.vulnerabilities | to_entries[] | select(.value.severity == "critical") | .key' | wc -l || echo 0)
+        
+        if [ "$CRITICAL_VULNS" -eq 0 ] && [ "$HIGH_VULNS" -eq 0 ]; then
+          echo "🟢 **Security Score: 95/100** - Excellent" >> security-monitoring.md
+        elif [ "$CRITICAL_VULNS" -eq 0 ] && [ "$HIGH_VULNS" -le 2 ]; then
+          echo "🟡 **Security Score: 80/100** - Good" >> security-monitoring.md
+        else
+          echo "🔴 **Security Score: 60/100** - Needs Attention" >> security-monitoring.md
+        fi
+        
+        echo "" >> security-monitoring.md
+        echo "- Critical vulnerabilities: $CRITICAL_VULNS" >> security-monitoring.md
+        echo "- High vulnerabilities: $HIGH_VULNS" >> security-monitoring.md
+        
+    - name: Create security issue if critical vulnerabilities found
+      if: github.event_name == 'schedule'
+      run: |
+        CRITICAL_VULNS=$(cat audit.json | jq '.vulnerabilities | to_entries[] | select(.value.severity == "critical") | .key' | wc -l || echo 0)
+        if [ "$CRITICAL_VULNS" -gt 0 ]; then
+          echo "Creating security issue for critical vulnerabilities..."
+          gh issue create \
+            --title "🚨 Critical Security Vulnerabilities Detected" \
+            --body "Automated security scan detected $CRITICAL_VULNS critical vulnerabilities that need immediate attention.
+
+## Details
+$(cat security-monitoring.md)
+
+## Action Required
+1. Review and update affected dependencies
+2. Test thoroughly after updates
+3. Deploy security patches as soon as possible
+
+This issue was created automatically by the security monitoring workflow." \
+            --label "security" \
+            --label "critical"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload monitoring report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-monitoring-report
+        path: |
+          security-monitoring.md
+          sbom.json
+          audit.json
+          outdated.json
+
+  dependabot-monitoring:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+    - name: Check Dependabot alerts
+      run: |
+        echo "# Dependabot Monitoring Report" > dependabot-monitoring.md
+        echo "Generated on: $(date)" >> dependabot-monitoring.md
+        echo "" >> dependabot-monitoring.md
+        
+        # Get Dependabot alerts using GitHub CLI
+        ALERTS=$(gh api repos/:owner/:repo/dependabot/alerts --jq '.[] | select(.state == "open") | "\(.security_advisory.severity): \(.security_advisory.description)"' 2>/dev/null || echo "No alerts found")
+        
+        echo "## Open Dependabot Alerts" >> dependabot-monitoring.md
+        echo "" >> dependabot-monitoring.md
+        if [ "$ALERTS" != "No alerts found" ]; then
+          echo "$ALERTS" >> dependabot-monitoring.md
+        else
+          echo "✅ No open Dependabot alerts" >> dependabot-monitoring.md
+        fi
+        
+    - name: Upload Dependabot report
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependabot-monitoring-report
+        path: dependabot-monitoring.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

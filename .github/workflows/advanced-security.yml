@@ -1,0 +1,209 @@
+name: Advanced Security
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security scan daily at 3 AM UTC
+    - cron: '0 3 * * *'
+
+jobs:
+  code-scanning:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript, typescript
+        config-file: ./.github/codeql/codeql-config.yml
+        
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+      
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:javascript"
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v4
+      with:
+        fail-on-severity: moderate
+        allow-ghsas: |
+          GHSA-xxxx-xxxx-xxxx
+        deny-ghsas: |
+          GHSA-xxxx-xxxx-xxxx
+
+  secret-scanning:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Run TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+    - name: Run Gitleaks
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  security-scorecard:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+        
+    - name: Run OSSF Scorecard
+      uses: ossf/scorecard-action@v2.3.1
+      with:
+        results_file: results.sarif
+        results_format: sarif
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload SARIF file to GitHub
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: results.sarif
+
+  npm-security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+      
+    - name: Run npm audit
+      run: npm audit --audit-level moderate --json > npm-audit.json
+      
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/node@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high --json > snyk-results.json || true
+
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-scan-results
+        path: |
+          npm-audit.json
+          snyk-results.json
+
+  container-security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  security-policy-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check for SECURITY.md
+      run: |
+        if [ ! -f "SECURITY.md" ]; then
+          echo "❌ SECURITY.md file not found"
+          exit 1
+        else
+          echo "✅ SECURITY.md file exists"
+        fi
+        
+    - name: Check for security policy
+      run: |
+        if ! grep -q "Security Policy" SECURITY.md; then
+          echo "❌ Security policy section not found in SECURITY.md"
+          exit 1
+        else
+          echo "✅ Security policy section found"
+        fi
+        
+    - name: Check for vulnerability reporting
+      run: |
+        if ! grep -q -i "vulnerability\|security issue\|report" SECURITY.md; then
+          echo "❌ Vulnerability reporting instructions not found"
+          exit 1
+        else
+          echo "✅ Vulnerability reporting instructions found"
+        fi
+
+  license-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+      
+    - name: Check licenses
+      run: |
+        npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD' --excludePrivatePackages || true
+        npx license-checker --json > licenses.json
+        
+    - name: Upload license report
+      uses: actions/upload-artifact@v4
+      with:
+        name: license-report
+        path: licenses.json

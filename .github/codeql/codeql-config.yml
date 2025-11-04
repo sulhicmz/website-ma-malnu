@@ -1,0 +1,66 @@
+# CodeQL Configuration for Advanced Security
+
+# Specify the languages to analyze
+languages:
+  - javascript
+  - typescript
+
+# Paths to include in the analysis
+paths:
+  - src/
+  - app/
+  - components/
+  - lib/
+
+# Paths to exclude from the analysis
+paths-ignore:
+  - node_modules/
+  - .next/
+  - out/
+  - build/
+  - dist/
+  - coverage/
+  - .git/
+  - .github/
+
+# Query packs to use
+query-packs:
+  - codeql/javascript-queries
+  - codeql/security-extended-queries
+  - codeql/security-and-quality
+
+# Additional queries to run
+queries:
+  - name: Use of non-local network
+    uses: codeql-javascript/javascript-security-and-quality.qls
+  - name: Incomplete sanitization
+    uses: codeql-javascript/javascript-security-extended.qls
+
+# Code scanning configuration
+code-scanning:
+  # Auto-build configuration
+  build-mode: autobuild
+  
+  # Extraction configuration
+  extraction:
+    javascript:
+      index: true
+      
+# Security configuration
+security:
+  # Enable security queries
+  enable-security-queries: true
+  
+  # Severity levels to report
+  severity-levels:
+    - error
+    - warning
+    - recommendation
+
+# Performance configuration
+performance:
+  # Maximum memory usage (in MB)
+  max-memory: 2048
+  
+  # Timeout for analysis (in seconds)
+  timeout: 3600

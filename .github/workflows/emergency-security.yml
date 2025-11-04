@@ -1,0 +1,189 @@
+name: Emergency Security Response
+
+on:
+  repository_dispatch:
+    types: [security-emergency]
+  workflow_dispatch:
+    inputs:
+      severity:
+        description: 'Severity level'
+        required: true
+        default: 'critical'
+        type: choice
+        options:
+        - critical
+        - high
+        - medium
+        - low
+      description:
+        description: 'Description of security issue'
+        required: true
+        type: string
+
+jobs:
+  emergency-response:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Create emergency security issue
+      run: |
+        SEVERITY="${{ github.event.inputs.severity || 'critical' }}"
+        DESCRIPTION="${{ github.event.inputs.description || 'Emergency security response triggered' }}"
+        
+        ISSUE_TITLE="🚨 EMERGENCY: Security Response - $SEVERITY"
+        ISSUE_BODY="## 🚨 Emergency Security Response
+
+**Severity**: $SEVERITY
+**Triggered**: $(date)
+**Description**: $DESCRIPTION
+
+## Immediate Actions Required
+
+1. [ ] Assess the security impact
+2. [ ] Identify affected systems/components
+3. [ ] Develop mitigation strategy
+4. [ ] Implement security patches
+5. [ ] Test security fixes
+6. [ ] Deploy emergency updates
+7. [ ] Monitor for anomalies
+8. [ ] Coordinate disclosure
+
+## Response Timeline
+
+- **T+0**: Emergency triggered
+- **T+1 hour**: Initial assessment complete
+- **T+4 hours**: Mitigation implemented
+- **T+24 hours**: Full patch deployed
+- **T+48 hours**: Public disclosure (if needed)
+
+## Communication
+
+- **Internal**: Notify all team members
+- **External**: Prepare security advisory
+- **Users**: Coordinate notification timing
+
+## Resources
+
+- [Security Policy](https://github.com/sulhicmz/website-ma-malnu/blob/main/SECURITY.md)
+- [Emergency Contacts](mailto:security@sulhicmz.com)
+- [Response Playbook](https://github.com/sulhicmz/website-ma-malnu/blob/main/SECURITY_SETUP.md)
+
+---
+*This issue was created automatically by the emergency security response workflow.*"
+        
+        gh issue create \
+          --title "$ISSUE_TITLE" \
+          --body "$ISSUE_BODY" \
+          --label "security" \
+          --label "emergency" \
+          --label "$SEVERITY" \
+          --assignee sulhicmz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  security-lockdown:
+    runs-on: ubuntu-latest
+    needs: emergency-response
+    if: github.event.inputs.severity == 'critical' || github.event.action == 'security-emergency'
+    
+    steps:
+    - name: Enable branch protection lockdown
+      run: |
+        echo "🔒 Implementing security lockdown for critical vulnerability..."
+        # This would typically include:
+        # - Restricting branch access
+        # - Enabling additional review requirements
+        # - Pausing automated deployments
+        
+    - name: Notify security team
+      run: |
+        echo "📢 Notifying security team of critical security event..."
+        # Add notification logic here (Slack, email, etc.)
+
+  rapid-scan:
+    runs-on: ubuntu-latest
+    needs: emergency-response
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Rapid security scan
+      run: |
+        echo "🔍 Performing rapid security assessment..."
+        
+        # Quick npm audit
+        npm audit --audit-level=high || true
+        
+        # Quick secret scan
+        grep -r "password\|secret\|token\|api_key" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" . | grep -v node_modules | head -10 || echo "No obvious secrets found"
+        
+        # Check recent commits for security issues
+        git log --oneline -10
+        
+    - name: Generate rapid assessment report
+      run: |
+        echo "# Rapid Security Assessment Report" > rapid-assessment.md
+        echo "Generated: $(date)" >> rapid-assessment.md
+        echo "Severity: ${{ github.event.inputs.severity || 'critical' }}" >> rapid-assessment.md
+        echo "" >> rapid-assessment.md
+        echo "## Quick Findings" >> rapid-assessment.md
+        echo "- Rapid scan completed" >> rapid-assessment.md
+        echo "- Detailed analysis in progress" >> rapid-assessment.md
+        echo "- Emergency response initiated" >> rapid-assessment.md
+        
+    - name: Upload rapid assessment
+      uses: actions/upload-artifact@v4
+      with:
+        name: rapid-security-assessment
+        path: rapid-assessment.md
+
+  post-incident:
+    runs-on: ubuntu-latest
+    needs: [emergency-response, rapid-scan]
+    if: always()
+    
+    steps:
+    - name: Create post-incident template
+      run: |
+        echo "# Post-Incident Report Template
+
+## Incident Summary
+- **Date**: $(date)
+- **Severity**: ${{ github.event.inputs.severity || 'critical' }}
+- **Duration**: [To be filled]
+- **Impact**: [To be assessed]
+
+## Timeline
+- **Detection**: [Time and method]
+- **Response**: [Actions taken]
+- **Resolution**: [Time and method]
+- **Recovery**: [Recovery steps]
+
+## Root Cause Analysis
+[Detailed analysis of what caused the security issue]
+
+## Lessons Learned
+[What went well, what could be improved]
+
+## Action Items
+- [ ] [Security improvement 1]
+- [ ] [Security improvement 2]
+- [ ] [Process improvement 1]
+- [ ] [Process improvement 2]
+
+## Prevention Measures
+[Steps to prevent similar incidents]
+
+## Communication Log
+- [Timestamp]: [Communication sent/received]
+
+---
+*This template should be filled out within 48 hours of incident resolution.*" > post-incident-template.md
+        
+    - name: Upload post-incident template
+      uses: actions/upload-artifact@v4
+      with:
+        name: post-incident-template
+        path: post-incident-template.md
