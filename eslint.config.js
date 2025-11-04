@@ -1,26 +1,22 @@
-import { FlatCompat } from '@eslint/eslintrc'
-import js from '@eslint/js'
-import typescript from '@typescript-eslint/eslint-plugin'
-import typescriptParser from '@typescript-eslint/parser'
-import react from 'eslint-plugin-react'
-import reactHooks from 'eslint-plugin-react-hooks'
+const { FlatCompat } = require('@eslint/eslintrc')
+const js = require('@eslint/js')
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
 })
 
-export default [
+module.exports = [
   js.configs.recommended,
   ...compat.extends('next/core-web-vitals'),
   ...compat.extends('next/typescript'),
   {
     plugins: {
-      '@typescript-eslint': typescript,
-      'react': react,
-      'react-hooks': reactHooks,
+      '@typescript-eslint': require('@typescript-eslint/eslint-plugin'),
+      'react': require('eslint-plugin-react'),
+      'react-hooks': require('eslint-plugin-react-hooks'),
     },
     languageOptions: {
-      parser: typescriptParser,
+      parser: require('@typescript-eslint/parser'),
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
