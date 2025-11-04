@@ -2,6 +2,8 @@
 import { getHomePageData } from '@/lib/fetchData'
 import dynamic from 'next/dynamic'
 import { OrganizationStructuredData, WebsiteStructuredData } from '@/components/seo/StructuredData'
+import { reportWebVitals, usePerformanceMonitoring } from '@/lib/webVitals'
+import { useEffect } from 'react'
 
 // Dynamic imports untuk komponen berat
 const CardBerita = dynamic(() => import('@/components/CardBerita'), {
@@ -66,7 +68,7 @@ function GallerySkeleton() {
 export const revalidate = 300 // Revalidate every 5 minutes
 
 export async function generateMetadata() {
-  const siteSettings = await getSiteSettings()
+  const { siteSettings } = await getHomePageData()
   
   return {
     title: siteSettings?.title || 'MA Malnu Kananga',
@@ -77,6 +79,26 @@ export async function generateMetadata() {
 
 export default async function HomePage() {
   const { siteSettings, beritaList, pengumumanList } = await getHomePageData()
+  
+  return (
+    <HomePageContent 
+      siteSettings={siteSettings}
+      beritaList={beritaList}
+      pengumumanList={pengumumanList}
+    />
+  )
+}
+
+function HomePageContent({ siteSettings, beritaList, pengumumanList }: any) {
+  useEffect(() => {
+    // Initialize Web Vitals monitoring
+    reportWebVitals()
+    
+    // Initialize performance monitoring
+    usePerformanceMonitoring()
+  }, [])
+
+  return (
   
   // Get latest 3 berita for homepage
   const latestBerita = beritaList.slice(0, 3)
