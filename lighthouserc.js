@@ -1,12 +1,13 @@
 module.exports = {
   ci: {
     collect: {
-      url: [
+url: [
         'http://localhost:3000',
         'http://localhost:3000/berita',
         'http://localhost:3000/galeri',
         'http://localhost:3000/ppdb',
-        'http://localhost:3000/kontak'
+        'http://localhost:3000/kontak',
+        'http://localhost:3000/profil'
       ],
       startServerCommand: 'npm start',
       startServerReadyPattern: 'ready',

@@ -14,7 +14,7 @@ const nextConfig = {
   // Compression
   compress: true,
   poweredByHeader: false,
-  generateEtags: false,
+  generateEtags: true,
   
   // Security headers
   async headers() {
@@ -34,10 +34,7 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
+
         ],
       },
     ]
