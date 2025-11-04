@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Image from 'next/image';
 
 const GalleryGrid = ({ images, columns }) => {
   const gridClasses = `grid gap-4 ${columns === 1 ? 'grid-cols-1' : 
@@ -9,24 +10,29 @@ const GalleryGrid = ({ images, columns }) => {
                               'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'}`;
 
   return (
-    <div className={gridClasses}>
+    <section className={gridClasses} aria-label="Image gallery">
       {images.map((image, index) => (
-        <div key={index} className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-          <div className="h-48 bg-gray-200 overflow-hidden">
-            <img 
+        <article key={index} className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+          <div className="h-48 bg-gray-200 overflow-hidden relative">
+            <Image 
               src={image.src} 
               alt={image.alt} 
-              className="w-full h-full object-cover"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover"
+              loading={index < 4 ? 'eager' : 'lazy'}
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
             />
           </div>
           {image.caption && (
-            <div className="p-4 bg-white">
+            <footer className="p-4 bg-white">
               <p className="text-gray-700 text-sm">{image.caption}</p>
-            </div>
+            </footer>
           )}
-        </div>
+        </article>
       ))}
-    </div>
+    </section>
   );
 };
 

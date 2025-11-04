@@ -1,9 +1,47 @@
 // src/lib/fetchData.ts
 import { sanityClient } from './sanity'
 import * as queries from './queries'
+import { cache } from 'react'
 
 // Default revalidation time (in seconds)
 export const REVALIDATION_TIME = 60 * 5 // 5 minutes
+
+// Cache hasil fetch untuk mencegah duplicate requests
+export const getSiteSettings = cache(async () => {
+  return await sanityClient.fetch(queries.siteSettingsQuery)
+})
+
+export const getBeritaList = cache(async () => {
+  return await sanityClient.fetch(queries.beritaListQuery)
+})
+
+export const getPengumumanList = cache(async () => {
+  return await sanityClient.fetch(queries.pengumumanListQuery)
+})
+
+// Parallel fetching untuk homepage
+export async function getHomePageData() {
+  try {
+    const [siteSettings, beritaList, pengumumanList] = await Promise.all([
+      getSiteSettings(),
+      getBeritaList(),
+      getPengumumanList()
+    ])
+    
+    return { siteSettings, beritaList, pengumumanList }
+  } catch (error) {
+    console.error('Error fetching homepage data:', error)
+    // Return fallback data
+    return {
+      siteSettings: {
+        title: 'MA Malnu Kananga',
+        description: 'Website resmi Madrasah Aliyah Malnu Kananga'
+      },
+      beritaList: [],
+      pengumumanList: []
+    }
+  }
+}
 
 // Fetch site settings
 export async function getSiteSettings() {
