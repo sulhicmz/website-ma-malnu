@@ -1,0 +1,173 @@
+# Dependabot configuration for MA Malnu Kananga educational website
+# Optimized for stability and security in educational environment
+
+version: 2
+updates:
+
+  # Core framework dependencies - high priority, conservative updates
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Jakarta"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "dependabot[bot]"
+    assignees:
+      - "dependabot[bot]"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "core"
+      - "security"
+    allow:
+      - dependency-type: "direct"
+    ignore:
+      # Pin major versions for stability
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+    groups:
+      next-js:
+        patterns:
+          - "next*"
+          - "@next/*"
+        dependency-type: "direct"
+      react-ecosystem:
+        patterns:
+          - "react*"
+          - "@types/react*"
+
+  # Development dependencies - more frequent updates
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "10:00"
+      timezone: "Asia/Jakarta"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "dependabot[bot]"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "development"
+    allow:
+      - dependency-type: "development"
+    groups:
+      eslint-config:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+          - "@typescript-eslint/*"
+      testing-tools:
+        patterns:
+          - "jest*"
+          - "@testing-library/*"
+          - "vitest*"
+          - "playwright*"
+      build-tools:
+        patterns:
+          - "prettier*"
+          - "postcss*"
+          - "autoprefixer*"
+          - "tailwindcss*"
+
+  # Sanity CMS dependencies - conservative updates for content stability
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "1"
+      time: "09:00"
+      timezone: "Asia/Jakarta"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "dependabot[bot]"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "cms"
+      - "sanity"
+    allow:
+      - dependency-type: "direct"
+    groups:
+      sanity-ecosystem:
+        patterns:
+          - "@sanity/*"
+          - "groq"
+          - "next-sanity"
+
+  # UI and utility libraries - balanced approach
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "bi-weekly"
+      day: "friday"
+      time: "14:00"
+      timezone: "Asia/Jakarta"
+    open-pull-requests-limit: 4
+    reviewers:
+      - "dependabot[bot]"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "ui"
+    allow:
+      - dependency-type: "direct"
+    ignore:
+      # Conservative updates for critical UI libraries
+      - dependency-name: "framer-motion"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "lucide-react"
+        update-types: ["version-update:semver-major"]
+    groups:
+      ui-components:
+        patterns:
+          - "lucide-react"
+          - "framer-motion"
+          - "react-hook-form"
+          - "react-hot-toast"
+          - "clsx"
+      date-utilities:
+        patterns:
+          - "date-fns*"
+
+  # GitHub Actions - monthly review
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "15"
+      time: "09:00"
+      timezone: "Asia/Jakarta"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "dependabot[bot]"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci"
+
+# Global configuration
+registries:
+  npm:
+    type: "npm-registry"
+    url: "https://registry.npmjs.org"
+    replaces-base: true

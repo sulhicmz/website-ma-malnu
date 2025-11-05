@@ -62,6 +62,34 @@ src/
 2. Export komponen di `src/components/index.js`
 3. Gunakan komponen di halaman dengan `import { NamaKomponen } from '@/components/NamaKomponen'`
 
+## Dependency Management
+
+This project includes automated dependency management to ensure security and stability:
+
+### Quick Commands
+```bash
+# Check for security vulnerabilities
+npm run deps:audit
+
+# List outdated packages
+npm run deps:outdated
+
+# Safe update with testing
+npm run deps:update
+
+# Check compatibility
+npm run deps:check
+```
+
+### Automated Features
+- ✅ Daily security vulnerability scanning
+- ✅ Weekly automated updates (conservative for core deps)
+- ✅ Automated testing on multiple Node.js versions
+- ✅ Bundle size monitoring
+- ✅ Performance regression detection
+
+📖 **Detailed Documentation**: See [docs/dependency-setup.md](docs/dependency-setup.md) for complete setup and troubleshooting guide.
+
 ## Deploy
 
 Untuk deploy ke Vercel:

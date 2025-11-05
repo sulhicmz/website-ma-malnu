@@ -21,8 +21,13 @@
     "build:analyze": "ANALYZE=true next build",
     "lighthouse": "lhci autorun",
     "accessibility": "pa11y-ci",
-    "security:audit": "npm audit --audit-level moderate",
-    "performance:check": "npm run build && npm run build:analyze"
+"security:audit": "npm audit --audit-level moderate",
+    "performance:check": "npm run build && npm run build:analyze",
+    "deps:audit": "node scripts/dependency-manager.js audit",
+    "deps:outdated": "node scripts/dependency-manager.js outdated",
+    "deps:update": "node scripts/dependency-manager.js update",
+    "deps:check": "node scripts/dependency-manager.js check",
+    "deps:bundle": "node scripts/dependency-manager.js bundle-size"
   },
 "dependencies": {
     "next": "14.2.33",
