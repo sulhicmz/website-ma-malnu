@@ -1,7 +1,7 @@
 ---
 description: Performs detailed code reviews for security, performance, and maintainability
 mode: subagent
-model: anthropic/claude-sonnet-4-20250514
+model: groq/llama-3.1-70b-versatile
 temperature: 0.1
 tools:
   write: false

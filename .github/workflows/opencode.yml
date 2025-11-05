@@ -2,15 +2,21 @@ name: opencode
 on:
   issue_comment:
     types: [created]
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
-  opencode:
+  # Manual trigger via comments
+  opencode-manual:
     if: |
-      contains(github.event.comment.body, '/oc') ||
-      contains(github.event.comment.body, '/opencode')
+      github.event_name == 'issue_comment' && 
+      (contains(github.event.comment.body, '/oc') || contains(github.event.comment.body, '/opencode'))
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: read
+      pull-requests: write
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,8 +26,30 @@ jobs:
       - name: Run opencode
         uses: sst/opencode/github@latest
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         with:
-          model: anthropic/claude-sonnet-4-20250514
-          # share: true
-          # github_token: xxxx
+          model: groq/llama-3.1-70b-versatile
+          share: true
+
+  # Automatic PR review
+  pr-auto-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Auto PR Review
+        uses: sst/opencode/github@latest
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        with:
+          model: groq/llama-3.1-70b-versatile
+          share: false
+          github_token: ${{ github.token }}

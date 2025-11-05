@@ -31,24 +31,45 @@
 - **@code-reviewer**: Performs detailed code reviews for security, performance, and maintainability
 
 ### Usage in GitHub
-Use `/opencode` or `/oc` in GitHub issues and pull requests to trigger agents:
+
+#### Automatic Trigger (No Command Needed) 🚀
+Agents automatically run when:
+- Pull request is **opened**
+- Pull request is **updated** (new commits pushed)
+- Pull request is **reopened**
+
+#### Manual Trigger
+Use `/opencode` or `/oc` in GitHub issues and pull requests:
 
 ```
 /opencode @pr-manager review this pull request
 /opencode @code-reviewer check for security issues
+/opencode @pr-manager check merge readiness
+/opencode @code-reviewer analyze performance impact
 ```
 
 ### Agent Capabilities
 
 #### PR Manager (@pr-manager)
+- **Auto-trigger**: Reviews all new/updated PRs automatically
 - Analyzes pull requests for code quality and compliance
 - Verifies CI/CD checks and approvals
 - Provides merge recommendations
 - Ensures proper PR workflow is followed
+- Checks for merge conflicts and dependencies
 
 #### Code Reviewer (@code-reviewer)
+- **Auto-trigger**: Performs security and quality analysis on all PRs
 - Security vulnerability assessment
 - Performance bottleneck identification
 - Code quality and maintainability analysis
 - Architecture and design pattern review
 - Testing coverage evaluation
+
+### Configuration
+- **Provider**: Groq (Free API)
+- **Models**: 
+  - `groq/llama-3.1-70b-versatile` (Main analysis)
+  - `groq/llama-3.1-8b-instant` (Quick tasks)
+- **Auto-review**: Enabled for all PR events
+- **Permissions**: Read-only (safe for production)
