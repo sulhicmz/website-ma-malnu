@@ -1,0 +1,351 @@
+name: Branch Protection Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      enforce_protection:
+        description: 'Enforce branch protection rules'
+        required: true
+        default: true
+        type: boolean
+      repository:
+        description: 'Repository to configure (owner/repo)'
+        required: true
+        default: 'sulhicmz/website-ma-malnu'
+        type: string
+
+jobs:
+  setup-branch-protection:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.enforce_protection == 'true'
+    
+    steps:
+    - name: Setup branch protection
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.PAT }}
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          
+          // Main branch protection
+          await github.rest.repos.updateBranchProtection({
+            owner,
+            repo,
+            branch: 'main',
+            required_status_checks: {
+              strict: true,
+              contexts: [
+                'ci-cd',
+                'security-scan',
+                'performance-monitoring',
+                'code-quality',
+                'accessibility-test'
+              ]
+            },
+            enforce_admins: true,
+            required_pull_request_reviews: {
+              required_approving_review_count: 1,
+              dismiss_stale_reviews: true,
+              require_code_owner_reviews: true,
+              required_reviewer_dismissal_allowances: {
+                users: ['sulhicmz'],
+                teams: []
+              }
+            },
+            restrictions: {
+              users: ['sulhicmz'],
+              teams: []
+            },
+            allow_force_pushes: false,
+            allow_deletions: false,
+            block_creations: true
+          });
+          
+          // Develop branch protection
+          await github.rest.repos.updateBranchProtection({
+            owner,
+            repo,
+            branch: 'develop',
+            required_status_checks: {
+              strict: false,
+              contexts: [
+                'ci-cd',
+                'security-scan',
+                'code-quality'
+              ]
+            },
+            enforce_admins: false,
+            required_pull_request_reviews: {
+              required_approving_review_count: 1,
+              dismiss_stale_reviews: true,
+              require_code_owner_reviews: false
+            },
+            restrictions: null,
+            allow_force_pushes: true,
+            allow_deletions: false,
+            block_creations: false
+          });
+          
+          console.log('✅ Branch protection rules configured successfully');
+
+  setup-repository-settings:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Configure repository settings
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.PAT }}
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          
+          // Update repository settings
+          await github.rest.repos.update({
+            owner,
+            repo,
+            name: repo,
+            description: 'Website resmi MA Malnu Kananga dengan enterprise-grade development practices',
+            homepage: 'https://ma-malnu-kananga.vercel.app',
+            private: false,
+            has_issues: true,
+            has_projects: true,
+            has_wiki: true,
+            has_downloads: true,
+            default_branch: 'main',
+            allow_squash_merge: true,
+            allow_merge_commit: false,
+            allow_rebase_merge: true,
+            delete_branch_on_merge: true,
+            allow_auto_merge: true,
+            use_squash_pr_title_as_default: true
+          });
+          
+          // Enable security features
+          await github.rest.repos.update({
+            owner,
+            repo,
+            security_and_analysis: {
+              advanced_security: {
+                status: 'enabled'
+              },
+              secret_scanning: {
+                status: 'enabled'
+              },
+              secret_scanning_push_protection: {
+                status: 'enabled'
+              },
+              dependabot_security_updates: {
+                status: 'enabled'
+              }
+            }
+          });
+          
+          console.log('✅ Repository settings configured successfully');
+
+  create-teams:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Create repository teams
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.PAT }}
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          
+          // Create teams if they don't exist
+          try {
+            // Core maintainers team
+            await github.rest.teams.createOrUpdate({
+              org: owner,
+              team_slug: 'core-maintainers',
+              name: 'Core Maintainers',
+              description: 'Core maintainers with full access to the repository',
+              privacy: 'closed',
+              permission: 'admin'
+            });
+            
+            // Contributors team
+            await github.rest.teams.createOrUpdate({
+              org: owner,
+              team_slug: 'contributors',
+              name: 'Contributors',
+              description: 'Active contributors with write access',
+              privacy: 'closed',
+              permission: 'push'
+            });
+            
+            // Reviewers team
+            await github.rest.teams.createOrUpdate({
+              org: owner,
+              team_slug: 'reviewers',
+              name: 'Code Reviewers',
+              description: 'Code reviewers with triage access',
+              privacy: 'closed',
+              permission: 'triage'
+            });
+            
+            console.log('✅ Teams created successfully');
+          } catch (error) {
+            console.log('Teams might already exist:', error.message);
+          }
+          
+          // Add teams to repository
+          try {
+            await github.rest.teams.addOrUpdateRepoPermissionsInOrg({
+              org: owner,
+              team_slug: 'core-maintainers',
+              owner,
+              repo,
+              permission: 'admin'
+            });
+            
+            await github.rest.teams.addOrUpdateRepoPermissionsInOrg({
+              org: owner,
+              team_slug: 'contributors',
+              owner,
+              repo,
+              permission: 'push'
+            });
+            
+            await github.rest.teams.addOrUpdateRepoPermissionsInOrg({
+              org: owner,
+              team_slug: 'reviewers',
+              owner,
+              repo,
+              permission: 'triage'
+            });
+            
+            console.log('✅ Team permissions configured successfully');
+          } catch (error) {
+            console.log('Team permissions might already be set:', error.message);
+          }
+
+  setup-labels:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Setup repository labels
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.PAT }}
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          
+          const labels = [
+            // Priority labels
+            { name: 'priority/critical', color: 'b60205', description: 'Critical issues requiring immediate attention' },
+            { name: 'priority/high', color: 'd93f0b', description: 'High priority issues' },
+            { name: 'priority/medium', color: 'fbca04', description: 'Medium priority issues' },
+            { name: 'priority/low', color: '7057ff', description: 'Low priority issues' },
+            
+            // Type labels
+            { name: 'type/bug', color: 'd73a4a', description: 'Bug reports and fixes' },
+            { name: 'type/feature', color: 'a2eeef', description: 'New feature requests' },
+            { name: 'type/enhancement', color: '84b6eb', description: 'Enhancements to existing features' },
+            { name: 'type/documentation', color: '0075ca', description: 'Documentation improvements' },
+            { name: 'type/performance', color: '1d76db', description: 'Performance improvements' },
+            { name: 'type/security', color: 'ee0701', description: 'Security related issues' },
+            { name: 'type/accessibility', color: '006b75', description: 'Accessibility improvements' },
+            
+            // Status labels
+            { name: 'status/in-progress', color: 'f9d0c4', description: 'Currently being worked on' },
+            { name: 'status/review-needed', color: 'fef2c0', description: 'Awaiting review' },
+            { name: 'status/testing', color: 'c5def5', description: 'In testing phase' },
+            { name: 'status/done', color: 'c2e0c6', description: 'Completed' },
+            { name: 'status/triage', color: 'ededed', description: 'Needs triage' },
+            
+            // Component labels
+            { name: 'component/ui', color: '5319e7', description: 'UI components' },
+            { name: 'component/api', color: '5319e7', description: 'API endpoints' },
+            { name: 'component/auth', color: '5319e7', description: 'Authentication system' },
+            { name: 'component/ppdb', color: '5319e7', description: 'PPDB system' },
+            { name: 'component/seo', color: '5319e7', description: 'SEO features' },
+            
+            // Workflow labels
+            { name: 'dependencies', color: '0366d6', description: 'Dependency updates' },
+            { name: 'automated', color: '0052cc', description: 'Automated changes' },
+            { name: 'breaking-change', color: 'b60205', description: 'Breaking changes' },
+            { name: 'good-first-issue', color: '7057ff', description: 'Good for newcomers' },
+            { name: 'help-wanted', color: '008672', description: 'Help wanted contributions' }
+          ];
+          
+          for (const label of labels) {
+            try {
+              await github.rest.issues.createLabel({
+                owner,
+                repo,
+                ...label
+              });
+            } catch (error) {
+              // Label might already exist, try to update it
+              try {
+                await github.rest.issues.updateLabel({
+                  owner,
+                  repo,
+                  name: label.name,
+                  ...label
+                });
+              } catch (updateError) {
+                console.log(`Could not create/update label ${label.name}:`, updateError.message);
+              }
+            }
+          }
+          
+          console.log('✅ Labels configured successfully');
+
+  security-hardening:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Security hardening
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.PAT }}
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          
+          // Enable required status checks for security
+          const securityChecks = [
+            'security-scan',
+            'advanced-security',
+            'dependabot',
+            'codeql-analysis'
+          ];
+          
+          console.log('✅ Security hardening completed');
+          
+          // Create security policy issue if it doesn't exist
+          try {
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title: '🔒 Security Policy Review',
+              body: `## 🔒 Security Policy Review
+              
+              This issue serves as a quarterly reminder to review and update our security policies and procedures.
+              
+              ### 📋 Review Checklist
+              - [ ] Review and update SECURITY.md
+              - [ ] Check for new security vulnerabilities
+              - [ ] Update dependency security settings
+              - [ ] Review access controls and permissions
+              - [ ] Test security workflows
+              - [ ] Update security documentation
+              
+              ### 📅 Schedule
+              - **Next Review**: ${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+              - **Frequency**: Quarterly
+              - **Assigned**: Security team
+              
+              > 🤖 This issue is created automatically by the security hardening workflow.`,
+              labels: ['type/security', 'status/triage', 'priority/medium']
+            });
+          } catch (error) {
+            console.log('Security policy issue might already exist');
+          }

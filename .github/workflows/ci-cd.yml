@@ -30,10 +30,10 @@ jobs:
     - name: Run TypeScript type check
       run: npm run type-check
       
-    - name: Run unit tests
+- name: Run unit tests
       run: npm run test
       
-- name: Check formatting
+    - name: Check formatting
       run: npm run format:check
       
     - name: Generate coverage report
