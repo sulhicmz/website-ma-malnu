@@ -88,6 +88,13 @@ npm run deps:check
 - ✅ Bundle size monitoring
 - ✅ Performance regression detection
 
+### Security Updates
+This branch updates critical dependencies to address security vulnerabilities:
+- Next.js updated to v16.0.1 to fix multiple critical vulnerabilities
+- Playwright updated to v1.56.1 to fix high severity vulnerability
+- esbuild updated to v0.25.12 to fix moderate vulnerability
+- Sanity dependencies updated to address moderate vulnerabilities
+
 📖 **Detailed Documentation**: See [docs/dependency-setup.md](docs/dependency-setup.md) for complete setup and troubleshooting guide.
 
 ## Deploy
