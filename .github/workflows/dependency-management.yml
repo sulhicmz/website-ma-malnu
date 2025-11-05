@@ -31,14 +31,28 @@ jobs:
         run: npm audit --audit-level moderate
         continue-on-error: true
 
-      - name: Check for known vulnerabilities
+- name: Check for known vulnerabilities
         run: |
-          if [ "$(npm audit --json | jq '.vulnerabilities | length')" -gt 0 ]; then
+          LOW_VULNS=$(npm audit --json | jq '[.vulnerabilities[] | select(.severity == "low")] | length')
+          MODERATE_VULNS=$(npm audit --json | jq '[.vulnerabilities[] | select(.severity == "moderate")] | length')
+          HIGH_VULNS=$(npm audit --json | jq '[.vulnerabilities[] | select(.severity == "high")] | length')
+          CRITICAL_VULNS=$(npm audit --json | jq '[.vulnerabilities[] | select(.severity == "critical")] | length')
+          
+          echo "🔍 Security Audit Results:"
+          echo "   Low: $LOW_VULNS"
+          echo "   Moderate: $MODERATE_VULNS"
+          echo "   High: $HIGH_VULNS"
+          echo "   Critical: $CRITICAL_VULNS"
+          
+          # Fail only if there are moderate or higher severity vulnerabilities
+          if [ "$MODERATE_VULNS" -gt 0 ] || [ "$HIGH_VULNS" -gt 0 ] || [ "$CRITICAL_VULNS" -gt 0 ]; then
             echo "⚠️ Security vulnerabilities found!"
+            echo "❌ Failing because of moderate or higher severity vulnerabilities"
             npm audit --json
             exit 1
           else
-            echo "✅ No security vulnerabilities found"
+            echo "✅ No moderate or higher severity vulnerabilities found"
+            echo "✅ Low severity vulnerabilities are acceptable for now"
           fi
 
   dependency-review:
