@@ -94,6 +94,8 @@ This branch updates critical dependencies to address security vulnerabilities:
 - Playwright updated to v1.56.1 to fix high severity vulnerability
 - esbuild updated to v0.25.12 to fix moderate vulnerability
 - Sanity dependencies updated to address moderate vulnerabilities
+- React and React DOM updated to v18.3.1 for compatibility with next-sanity
+- @sanity/vision updated to v4.13.0 to fix prismjs vulnerability
 
 📖 **Detailed Documentation**: See [docs/dependency-setup.md](docs/dependency-setup.md) for complete setup and troubleshooting guide.
 
