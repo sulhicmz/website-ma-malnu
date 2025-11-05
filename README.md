@@ -90,7 +90,7 @@ npm run deps:check
 
 ### Security Updates
 This branch updates critical dependencies to address security vulnerabilities:
-- Next.js updated to v15.1.0 to fix multiple critical vulnerabilities
+- Next.js updated to v15.5.6 to fix multiple critical vulnerabilities
 - Playwright updated to v1.56.1 to fix high severity vulnerability
 - esbuild updated to v0.25.12 to fix moderate vulnerability
 - Sanity dependencies updated to address moderate vulnerabilities
