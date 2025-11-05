@@ -1,0 +1,50 @@
+name: 📚 Documentation Issue
+description: Report issues with documentation or suggest improvements
+title: "[DOCS]: "
+labels: ["documentation", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Terima kasih telah membantu meningkatkan dokumentasi kami!
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Jenis Dokumentasi
+      description: Pilih jenis dokumentasi yang ingin Anda laporkan
+      options:
+        - README
+        - API Documentation
+        - Setup Guide
+        - Component Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue-description
+    attributes:
+      label: Deskripsi Masalah
+      description: Jelaskan masalah dengan dokumentasi atau saran perbaikan
+      placeholder: Dokumentasi tentang... tidak jelas karena...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-improvement
+    attributes:
+      label: Saran Perbaikan
+      description: Bagaimana dokumentasi ini bisa diperbaiki?
+      placeholder: Saya sarankan untuk menambahkan...
+    validations:
+      required: false
+
+  - type: input
+    id: doc-location
+    attributes:
+      label: Lokasi Dokumentasi
+      description: Link atau path ke dokumentasi yang bermasalah
+      placeholder: docs/setup.md atau https://...
+    validations:
+      required: false
