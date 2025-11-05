@@ -3,6 +3,7 @@
 [![CI/CD Pipeline](https://github.com/sulhicmz/website-ma-malnu/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/sulhicmz/website-ma-malnu/actions/workflows/ci-cd.yml)
 [![Security Scan](https://github.com/sulhicmz/website-ma-malnu/actions/workflows/security.yml/badge.svg)](https://github.com/sulhicmz/website-ma-malnu/actions/workflows/security.yml)
 [![Performance Monitor](https://github.com/sulhicmz/website-ma-malnu/actions/workflows/performance-monitoring.yml/badge.svg)](https://github.com/sulhicmz/website-ma-malnu/actions/workflows/performance-monitoring.yml)
+[![OpenCode Review](https://github.com/sulhicmz/website-ma-malnu/actions/workflows/opencode.yml/badge.svg)](https://github.com/sulhicmz/website-ma-malnu/actions/workflows/opencode.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Documentation-blue)](https://sulhicmz.github.io/website-ma-malnu/)
 
