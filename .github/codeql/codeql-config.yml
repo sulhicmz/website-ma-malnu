@@ -32,9 +32,9 @@ query-packs:
 # Additional queries to run
 queries:
   - name: Use of non-local network
-    uses: codeql-javascript/javascript-security-and-quality.qls
+    uses: codeql-javascript/ql/src/Security/CWE/CWE-939.ql
   - name: Incomplete sanitization
-    uses: codeql-javascript/javascript-security-extended.qls
+    uses: codeql-javascript/ql/src/Security/CWE/CWE-20.ql
 
 # Code scanning configuration
 code-scanning:
