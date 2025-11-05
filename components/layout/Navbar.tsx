@@ -27,8 +27,12 @@ export default function Navbar() {
     { name: 'Kontak', href: '/kontak' },
   ]
 
-  return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-white/90 backdrop-blur-sm'}`}>
+return (
+    <nav 
+      className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-white/90 backdrop-blur-sm'}`}
+      role="navigation"
+      aria-label="Navigasi utama"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
@@ -44,10 +48,10 @@ export default function Navbar() {
           {/* Desktop Menu */}
           <div className="hidden md:ml-6 md:flex md:items-center md:space-x-8">
             {navLinks.map((link) => (
-              <Link 
+<Link 
                 key={link.name}
                 href={link.href}
-                className="text-gray-700 font-medium hover:text-primary-600 transition-colors"
+                className="text-gray-700 font-medium hover:text-primary-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded px-2 py-1"
               >
                 {link.name}
               </Link>
@@ -56,9 +60,9 @@ export default function Navbar() {
           
           {/* CTA Button */}
           <div className="hidden md:flex items-center">
-            <Link 
+<Link 
               href="/ppdb/daftar"
-              className="ml-4 px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-primary-700 hover:bg-primary-800 transition-colors"
+              className="ml-4 px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-primary-700 hover:bg-primary-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               Daftar Sekarang
             </Link>
@@ -67,9 +71,10 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <div className="flex items-center md:hidden">
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary-600 focus:outline-none"
-              aria-expanded="false"
+onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              aria-label={isMenuOpen ? 'Tutup menu' : 'Buka menu'}
+              aria-expanded={isMenuOpen}
             >
               <span className="sr-only">Open main menu</span>
               {isMenuOpen ? (

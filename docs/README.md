@@ -1,4 +1,42 @@
-# Website MA Malnu - Documentation
+# Dokumentasi Website MA Malnu
+
+Selamat datang di dokumentasi terpusat untuk website MA Malnu Kananga.
+
+## 📚 **Struktur Dokumentasi**
+
+### 📋 **Guides** (`/guides`)
+- **Branding & Design**: Panduan brand, desain tokens, wireframe
+- **Components**: Dokumentasi komponen UI (card, navbar, footer, dll)
+- **Content**: Panduan copywriting dan konten
+- **Features**: Spesifikasi fitur (PPDB online, banner, dll)
+
+### 🔧 **Technical** (`/technical`)
+- **Architecture**: Arsitektur informasi dan teknis stack
+- **Development**: Integrasi, optimasi, dan development guide
+- **Security**: Keamanan dan performa
+- **SEO**: Teknis SEO dan konten
+- **CMS**: Skema dan konfigurasi CMS
+
+### 📊 **Project Management** (`/project-management`)
+- **Planning**: Perencanaan scope dan roadmap
+- **Process**: Dokumentasi pelatihan dan QA
+- **Operations**: Operasional dan pemeliharaan
+
+## 🚀 **Quick Start**
+
+1. **Development**: Lihat `DEVELOPMENT.md`
+2. **Deployment**: Lihat `docs/technical/deploy_domain.md`
+3. **API Reference**: Lihat `API.md`
+
+## 📖 **Dokumentasi Utama**
+
+- [README.md](../README.md) - Overview dan getting started
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Kontribusi dan development workflow
+- [API.md](API.md) - Dokumentasi API
+- [DEVELOPMENT.md](DEVELOPMENT.md) - Setup development environment
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Troubleshooting guide
+
+---
 
 ## 📚 Table of Contents
 
