@@ -82,9 +82,10 @@ export default function HeroSection() {
                 <div className="flex-shrink-0 h-12 w-12 rounded-full bg-green-700 flex items-center justify-center">
                   <span className="text-white font-bold text-lg">50+</span>
                 </div>
-                <div className="ml-3">
+<div className="ml-3">
                   <p className="text-sm font-medium">Guru Berpengalaman</p>
                 </div>
+              </div>
               
               <div className="flex items-center">
                 <div className="flex-shrink-0 h-12 w-12 rounded-full bg-green-700 flex items-center justify-center">

@@ -185,7 +185,8 @@ export default function TestimonialSection() {
                   <div className="flex mt-1">
                     {renderStars(testimonials[currentTestimonial].rating)}
                   </div>
-                </div>
+</div>
+              </div>
               
               <div className="mt-6 relative">
                 <Quote className="h-8 w-8 text-green-200 absolute -top-4 -left-2" />
