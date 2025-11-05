@@ -1,0 +1,32 @@
+# CODEOWNERS File
+# This file controls who is the default owner for files in the repository
+
+# Global owners - will be default for any file
+* @sulhicmz
+
+# Documentation
+docs/ @sulhicmz
+*.md @sulhicmz
+
+# Configuration files
+.github/ @sulhicmz
+*.config.* @sulhicmz
+package.json @sulhicmz
+package-lock.json @sulhicmz
+
+# Source code
+src/ @sulhicmz
+app/ @sulhicmz
+components/ @sulhicmz
+lib/ @sulhicmz
+
+# Styles and assets
+styles/ @sulhicmz
+public/ @sulhicmz
+
+# Security and CI/CD
+SECURITY.md @sulhicmz
+scripts/ @sulhicmz
+
+# Emergency overrides - can be used for critical security fixes
+# Format: @username or @teamname

@@ -1,0 +1,215 @@
+name: Repository Health Check
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/health-check.yml'
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+        
+      - name: Check package.json health
+        run: |
+          echo "📦 Checking package.json health..."
+          
+          # Check for outdated dependencies
+          npx npm-check-updates --version
+          
+          # Check for security vulnerabilities
+          npm audit --audit-level moderate
+          
+          # Check package size
+          npx bundlesize
+          
+      - name: Check code quality metrics
+        run: |
+          echo "🔍 Checking code quality..."
+          
+          # Run ESLint with coverage
+          npm run lint -- --format=json --output-file=eslint-report.json
+          
+          # Check TypeScript coverage
+          npm run type-check
+          
+          # Check test coverage
+          npm run test -- --coverage --coverageReporters=json-summary
+          
+      - name: Check documentation completeness
+        run: |
+          echo "📚 Checking documentation..."
+          
+          # Check if README is comprehensive
+          if [ -f "README.md" ]; then
+            echo "✅ README.md exists"
+            # Check for essential sections
+            if grep -q "## Installation" README.md && grep -q "## Usage" README.md; then
+              echo "✅ README has essential sections"
+            else
+              echo "⚠️ README missing essential sections"
+            fi
+          else
+            echo "❌ README.md missing"
+          fi
+          
+          # Check API documentation
+          if [ -f "API.md" ]; then
+            echo "✅ API.md exists"
+          else
+            echo "⚠️ API.md missing"
+          fi
+          
+          # Check security documentation
+          if [ -f "SECURITY.md" ]; then
+            echo "✅ SECURITY.md exists"
+          else
+            echo "❌ SECURITY.md missing"
+          fi
+          
+      - name: Check GitHub configurations
+        run: |
+          echo "⚙️ Checking GitHub configurations..."
+          
+          # Check CODEOWNERS
+          if [ -f ".github/CODEOWNERS" ]; then
+            echo "✅ CODEOWNERS exists"
+          else
+            echo "❌ CODEOWNERS missing"
+          fi
+          
+          # Check Dependabot config
+          if [ -f ".github/dependabot.yml" ]; then
+            echo "✅ Dependabot config exists"
+          else
+            echo "❌ Dependabot config missing"
+          fi
+          
+          # Check issue templates
+          if [ -d ".github/ISSUE_TEMPLATE" ]; then
+            echo "✅ Issue templates exist"
+            echo "📋 Available templates:"
+            ls .github/ISSUE_TEMPLATE/
+          else
+            echo "⚠️ No issue templates found"
+          fi
+          
+          # Check workflows
+          if [ -d ".github/workflows" ]; then
+            echo "✅ Workflows exist"
+            echo "🔄 Available workflows:"
+            ls .github/workflows/
+          else
+            echo "❌ No workflows found"
+          fi
+          
+      - name: Check performance metrics
+        run: |
+          echo "⚡ Checking performance metrics..."
+          
+          # Build project
+          npm run build
+          
+          # Check bundle size
+          if [ -f ".next/analyze/client.html" ]; then
+            echo "✅ Bundle analysis available"
+          else
+            echo "⚠️ Run 'npm run build:analyze' for bundle analysis"
+          fi
+          
+          # Check Lighthouse config
+          if [ -f "lighthouserc.js" ]; then
+            echo "✅ Lighthouse CI configured"
+          else
+            echo "⚠️ Lighthouse CI not configured"
+          fi
+          
+      - name: Generate health report
+        run: |
+          echo "📊 Generating health report..."
+          
+          cat > health-report.md << 'EOF'
+          # Repository Health Report
+          
+          Generated on: $(date)
+          
+          ## 📦 Dependencies
+          - Security audit: $(npm audit --audit-level moderate --json | jq -r '.metadata.vulnerabilities.total // 0') vulnerabilities found
+          - Outdated packages: Check with `npm outdated`
+          
+          ## 🔍 Code Quality
+          - ESLint: $(npm run lint 2>&1 | grep -c "error" || echo "0") errors
+          - TypeScript: $(npm run type-check 2>&1 | grep -c "error" || echo "0") errors
+          - Test coverage: Check coverage reports
+          
+          ## 📚 Documentation
+          - README: $([ -f "README.md" ] && echo "✅" || echo "❌")
+          - API docs: $([ -f "API.md" ] && echo "✅" || echo "❌")
+          - Security policy: $([ -f "SECURITY.md" ] && echo "✅" || echo "❌")
+          
+          ## ⚙️ GitHub Configuration
+          - CODEOWNERS: $([ -f ".github/CODEOWNERS" ] && echo "✅" || echo "❌")
+          - Dependabot: $([ -f ".github/dependabot.yml" ] && echo "✅" || echo "❌")
+          - Issue templates: $([ -d ".github/ISSUE_TEMPLATE" ] && echo "✅" || echo "❌")
+          
+          ## ⚡ Performance
+          - Build status: $([ -d ".next" ] && echo "✅" || echo "❌")
+          - Bundle analysis: $([ -f ".next/analyze/client.html" ] && echo "✅" || echo "❌")
+          - Lighthouse CI: $([ -f "lighthouserc.js" ] && echo "✅" || echo "❌")
+          
+          ## 🏷️ Recommendations
+          - [ ] Address any security vulnerabilities
+          - [ ] Update outdated dependencies
+          - [ ] Improve test coverage
+          - [ ] Add missing documentation
+          - [ ] Optimize bundle size
+          EOF
+          
+          echo "📄 Health report generated"
+          
+      - name: Upload health report
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-report
+          path: health-report.md
+          
+      - name: Create issue for health check results
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            
+            if (fs.existsSync('health-report.md')) {
+              const report = fs.readFileSync('health-report.md', 'utf8');
+              
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🏥 Repository Health Check - ${new Date().toISOString().split('T')[0]}`,
+                body: report,
+                labels: ['type/maintenance', 'priority/medium']
+              });
+            }

@@ -1,10 +1,11 @@
-name: CI/CD Pipeline with Performance Analysis
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
 
 jobs:
   lint-and-test:
@@ -32,8 +33,19 @@ jobs:
     - name: Run unit tests
       run: npm run test
       
-    - name: Check formatting
+- name: Check formatting
       run: npm run format:check
+      
+    - name: Generate coverage report
+      run: npm run test -- --coverage
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
       
     - name: Build project
       run: npm run build

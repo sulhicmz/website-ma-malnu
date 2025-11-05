@@ -1,12 +1,21 @@
-name: Branch Protection Rules
+name: Branch Protection Setup
 
 on:
+  workflow_dispatch: # Manual trigger for initial setup
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
+    paths:
+      - '.github/workflows/branch-protection.yml'
+      - '.github/CODEOWNERS'
 
 jobs:
   setup-branch-protection:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      branches: write
+      pull-requests: write
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -16,52 +25,76 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            await github.rest.repos.updateBranchProtection({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: 'main',
-              required_status_checks: {
-                strict: true,
-                contexts: [
-                  'ci-cd',
-                  'code-quality',
-                  'security-scan'
-                ]
-              },
-              enforce_admins: true,
-              required_pull_request_reviews: {
-                required_approving_review_count: 1,
-                dismiss_stale_reviews: true,
-                require_code_owner_reviews: true
-              },
-              restrictions: null,
-              allow_force_pushes: false,
-              allow_deletions: false
-            });
+            try {
+              await github.rest.repos.updateBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: 'main',
+                required_status_checks: {
+                  strict: true,
+                  contexts: [
+                    'ci-cd',
+                    'code-quality',
+                    'security-scan'
+                  ]
+                },
+                enforce_admins: true,
+                required_pull_request_reviews: {
+                  required_approving_review_count: 2,
+                  dismiss_stale_reviews: true,
+                  require_code_owner_reviews: true,
+                  require_last_push_approval: true
+                },
+                restrictions: null,
+                allow_force_pushes: false,
+                allow_deletions: false,
+                required_conversation_resolution: true
+              });
+              console.log('✅ Main branch protection updated successfully');
+            } catch (error) {
+              console.log('⚠️ Main branch protection setup failed:', error.message);
+            }
             
       - name: Setup branch protection for develop
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            await github.rest.repos.updateBranchProtection({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: 'develop',
-              required_status_checks: {
-                strict: false,
-                contexts: [
-                  'ci-cd',
-                  'code-quality'
-                ]
-              },
-              enforce_admins: false,
-              required_pull_request_reviews: {
-                required_approving_review_count: 1,
-                dismiss_stale_reviews: false,
-                require_code_owner_reviews: false
-              },
-              restrictions: null,
-              allow_force_pushes: true,
-              allow_deletions: false
-            });
+            try {
+              await github.rest.repos.updateBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: 'develop',
+                required_status_checks: {
+                  strict: false,
+                  contexts: [
+                    'ci-cd',
+                    'code-quality'
+                  ]
+                },
+                enforce_admins: false,
+                required_pull_request_reviews: {
+                  required_approving_review_count: 1,
+                  dismiss_stale_reviews: true,
+                  require_code_owner_reviews: false
+                },
+                restrictions: null,
+                allow_force_pushes: true,
+                allow_deletions: false,
+                required_conversation_resolution: true
+              });
+              console.log('✅ Develop branch protection updated successfully');
+            } catch (error) {
+              console.log('⚠️ Develop branch protection setup failed:', error.message);
+            }
+            
+      - name: Verify CODEOWNERS
+        run: |
+          echo "📋 Verifying CODEOWNERS file..."
+          if [ -f ".github/CODEOWNERS" ]; then
+            echo "✅ CODEOWNERS file exists"
+            cat .github/CODEOWNERS
+          else
+            echo "❌ CODEOWNERS file missing"
+            exit 1
+          fi

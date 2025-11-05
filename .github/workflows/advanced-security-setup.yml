@@ -1,0 +1,101 @@
+name: Advanced Security Setup
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/advanced-security.yml'
+      - 'SECURITY.md'
+
+jobs:
+  enable-security-features:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+      actions: read
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Enable Dependabot alerts
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.repos.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: context.repo.repo,
+                security_and_analysis: {
+                  dependabot_alerts: {
+                    status: 'enabled'
+                  },
+                  secret_scanning: {
+                    status: 'enabled'
+                  },
+                  secret_scanning_push_protection: {
+                    status: 'enabled'
+                  },
+                  advanced_security: {
+                    status: 'enabled'
+                  }
+                }
+              });
+              console.log('✅ Advanced Security features enabled');
+            } catch (error) {
+              console.log('⚠️ Security features setup failed:', error.message);
+              console.log('Note: Some features may require GitHub Enterprise or manual enablement');
+            }
+            
+      - name: Verify security configurations
+        run: |
+          echo "🔒 Verifying security configurations..."
+          
+          # Check if security files exist
+          files=("SECURITY.md" ".github/dependabot.yml" ".github/CODEOWNERS")
+          for file in "${files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✅ $file exists"
+            else
+              echo "❌ $file missing"
+            fi
+          done
+          
+          # Check for security workflows
+          if [ -d ".github/workflows" ]; then
+            echo "📁 Security workflows found:"
+            ls .github/workflows/*security* .github/workflows/*scan* 2>/dev/null || echo "No security-specific workflows"
+          fi
+          
+      - name: Create security policy
+        run: |
+          if [ ! -f "SECURITY_POLICY.md" ]; then
+            cat > SECURITY_POLICY.md << 'EOF'
+            # Security Policy
+            
+            ## Supported Versions
+            - Version 1.0.0 and above
+            
+            ## Reporting a Vulnerability
+            Please report security vulnerabilities privately to:
+            - Email: security@ma-malnu-kananga.sch.id
+            - GitHub Security Advisory: Use "Report a vulnerability" button
+            
+            ## Response Time
+            - Critical: 24 hours
+            - High: 72 hours
+            - Medium: 7 days
+            - Low: 14 days
+            
+            ## Security Best Practices
+            - Keep dependencies updated
+            - Use strong authentication
+            - Regular security audits
+            - Follow secure coding practices
+            EOF
+            echo "✅ Security policy created"
+          fi
