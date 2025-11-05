@@ -29,7 +29,7 @@
     "deps:check": "node scripts/dependency-manager.js check",
     "deps:bundle": "node scripts/dependency-manager.js bundle-size"
   },
-"dependencies": {
+  "dependencies": {
     "@sanity/client": "7.12.1",
     "@sanity/image-url": "1.0.2",
     "@sanity/vision": "4.13.0",
