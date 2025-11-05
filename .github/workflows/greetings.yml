@@ -1,0 +1,39 @@
+name: Greetings
+
+on: [pull_request_target, issues]
+
+jobs:
+  greeting:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            👋 Terima kasih telah membuat issue pertama Anda di Website MA Malnu Kananga!
+
+            Kami akan segera meninjau issue Anda. Sementara itu, pastikan Anda telah:
+            - ✅ Memberikan informasi yang cukup detail
+            - ✅ Mengikuti template yang disediakan
+            - ✅ Mencari issue yang sudah ada untuk menghindari duplikasi
+
+            Jika Anda ingin berkontribusi dengan kode, silakan baca [CONTRIBUTING.md](https://github.com/sulhicmz/website-ma-malnu/blob/main/CONTRIBUTING.md).
+
+            Selamat berkontribusi! 🚀
+          pr-message: |
+            👋 Terima kasih telah membuat Pull Request pertama Anda di Website MA Malnu Kananga!
+
+            Kami sangat menghargai kontribusi Anda! 🎉
+
+            Maintainer akan segera mereview PR Anda. Sementara itu, pastikan:
+            - ✅ Semua checks telah passed
+            - ✅ Anda telah mengisi template PR dengan lengkap
+            - ✅ Kode Anda mengikuti style guide kami
+            - ✅ Anda telah menambahkan test jika diperlukan
+
+            Jika ada pertanyaan, jangan ragu untuk bertanya di comment!
+
+            Happy coding! 💻
