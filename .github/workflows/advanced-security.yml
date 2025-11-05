@@ -1,5 +1,11 @@
 name: Advanced Security
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: read
+
 on:
   push:
     branches: [ main, develop ]

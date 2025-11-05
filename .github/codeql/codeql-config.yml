@@ -29,12 +29,8 @@ query-packs:
   - codeql/security-extended-queries
   - codeql/security-and-quality
 
-# Additional queries to run
-queries:
-  - name: Use of non-local network
-    uses: codeql-javascript/ql/src/Security/CWE/CWE-939.ql
-  - name: Incomplete sanitization
-    uses: codeql-javascript/ql/src/Security/CWE/CWE-20.ql
+# Using query packs for comprehensive security analysis
+# No additional custom queries needed - query packs cover security needs
 
 # Code scanning configuration
 code-scanning:
