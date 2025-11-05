@@ -23,3 +23,32 @@
 - **Data Fetching**: Use Sanity client via `src/lib/fetchData.ts`, respect REVALIDATION_TIME
 - **SEO**: Use MetaTags and structured data components from `src/components/seo/`
 - **ESLint Rules**: No unused vars, warn on explicit any, warn on console usage
+
+## OpenCode Agents
+
+### Available Agents
+- **@pr-manager**: Manages pull requests including reviews, approvals, and merge decisions
+- **@code-reviewer**: Performs detailed code reviews for security, performance, and maintainability
+
+### Usage in GitHub
+Use `/opencode` or `/oc` in GitHub issues and pull requests to trigger agents:
+
+```
+/opencode @pr-manager review this pull request
+/opencode @code-reviewer check for security issues
+```
+
+### Agent Capabilities
+
+#### PR Manager (@pr-manager)
+- Analyzes pull requests for code quality and compliance
+- Verifies CI/CD checks and approvals
+- Provides merge recommendations
+- Ensures proper PR workflow is followed
+
+#### Code Reviewer (@code-reviewer)
+- Security vulnerability assessment
+- Performance bottleneck identification
+- Code quality and maintainability analysis
+- Architecture and design pattern review
+- Testing coverage evaluation
