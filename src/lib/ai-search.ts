@@ -185,7 +185,7 @@ class AISearchEngine {
     const terms = query.query.toLowerCase().split(/\s+/).filter(term => term.length > 2)
     const results: SearchResult[] = []
     
-    for (const [id, content] of this.index) {
+    for (const content of this.index.values()) {
       let score = 0
       const matches: string[] = []
       
