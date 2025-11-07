@@ -1,6 +1,6 @@
 // src/app/berita/[slug]/page.tsx
 import { getBerita, getAllBeritaSlugs, getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 

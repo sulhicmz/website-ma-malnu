@@ -1,5 +1,5 @@
 // src/app/sitemap.ts
-import { client } from '@/lib/sanity'
+import { sanityClient as client } from '@/lib/sanity'
 
 export default async function sitemap() {
   const siteUrl = 'https://www.malnukananga.sch.id'

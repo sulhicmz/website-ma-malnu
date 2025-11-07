@@ -1,7 +1,7 @@
 // src/app/galeri/page.tsx
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
-import { GalleryGrid } from '@/components/GalleryGrid'
+import { Breadcrumb } from '@/components'
+import { GalleryGrid } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 

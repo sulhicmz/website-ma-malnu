@@ -1,6 +1,6 @@
 // src/app/pengumuman/[slug]/page.tsx
 import { getPengumuman, getAllPengumumanSlugs, getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 

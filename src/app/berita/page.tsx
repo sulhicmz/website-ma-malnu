@@ -1,8 +1,8 @@
 // src/app/berita/page.tsx
 import { getBeritaList, getSiteSettings } from '@/lib/fetchData'
-import { CardBerita } from '@/components/CardBerita'
-import { Pagination } from '@/components/Pagination'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { CardBerita } from '@/components'
+import { Pagination } from '@/components'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 

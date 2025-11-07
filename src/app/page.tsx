@@ -1,8 +1,8 @@
 // src/app/page.tsx
 import { getSiteSettings, getBeritaList, getPengumumanList } from '@/lib/fetchData'
-import { CardBerita } from '@/components/CardBerita'
-import { CardGuru } from '@/components/CardGuru'
-import { GalleryGrid } from '@/components/GalleryGrid'
+import { CardBerita } from '@/components'
+import { CardGuru } from '@/components'
+import { GalleryGrid } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 

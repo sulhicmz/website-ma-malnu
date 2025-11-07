@@ -1,6 +1,6 @@
 // src/app/kontak/page.tsx
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import GoogleMapEmbed from '@/components/GoogleMapEmbed'
 

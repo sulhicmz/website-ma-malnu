@@ -1,6 +1,6 @@
 // src/app/guru-staf/[slug]/page.tsx
 import { getGuru, getAllGuruSlugs, getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 

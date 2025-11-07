@@ -1,10 +1,10 @@
 import { setupServer } from 'msw/node'
-import { rest } from 'msw'
+import { http } from 'msw'
 
 // Mock Sanity API responses
 export const handlers = [
   // Site settings
-  rest.get('https://*.api.sanity.io/v2021-06-07/data/query/production', (req, res, ctx) => {
+  http.get('https://*.api.sanity.io/v2021-06-07/data/query/production', (req, res, ctx) => {
     if (req.url.searchParams.get('query')?.includes('siteSettings')) {
       return res(
         ctx.status(200),
@@ -72,7 +72,7 @@ export const handlers = [
   }),
 
   // PPDB API
-  rest.post('/api/ppdb', (req, res, ctx) => {
+  http.post('/api/ppdb', (req, res, ctx) => {
     return res(
       ctx.status(200),
       ctx.json({ 
@@ -83,7 +83,7 @@ export const handlers = [
   }),
 
   // RSS API
-  rest.get('/api/rss', (req, res, ctx) => {
+  http.get('/api/rss', (req, res, ctx) => {
     return res(
       ctx.status(200),
       ctx.set('Content-Type', 'application/rss+xml'),

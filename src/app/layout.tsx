@@ -1,8 +1,8 @@
 // src/app/layout.tsx
 import React from 'react'
 import './globals.css'
-import { Navbar } from '@/components/Navbar'
-import { Footer } from '@/components/Footer'
+import { Navbar } from '@/components'
+import { Footer } from '@/components'
 import GoogleTagManager from '@/components/GoogleTagManager'
 
 export const metadata = {

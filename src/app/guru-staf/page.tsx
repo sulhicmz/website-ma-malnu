@@ -1,7 +1,7 @@
 // src/app/guru-staf/page.tsx
 import { getGuruList, getSiteSettings } from '@/lib/fetchData'
-import { CardGuru } from '@/components/CardGuru'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { CardGuru } from '@/components'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
