@@ -1,0 +1,394 @@
+name: Enhanced Issue Triage Automation
+
+on:
+  issues:
+    types: [opened, reopened, closed, labeled, unlabeled]
+  pull_request:
+    types: [opened, reopened, closed, ready_for_review, review_requested]
+  issue_comment:
+    types: [created]
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  # Enhanced Issue Triage
+  triage-issues:
+    name: Enhanced Issue Triage
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+    permissions:
+      issues: write
+      labels: write
+      contents: read
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Enhanced Auto-labeling
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const labels = [];
+            const body = issue.body.toLowerCase();
+            const title = issue.title.toLowerCase();
+            
+            // Priority Detection
+            if (body.includes('urgent') || body.includes('critical') || title.includes('urgent') || title.includes('critical')) {
+              labels.push('priority/critical');
+            } else if (body.includes('high priority') || body.includes('important')) {
+              labels.push('priority/high');
+            } else if (body.includes('low priority') || body.includes('minor')) {
+              labels.push('priority/low');
+            } else {
+              labels.push('priority/medium');
+            }
+            
+            // Type Detection
+            if (title.includes('[bug]') || body.includes('error') || body.includes('broken') || body.includes('not working')) {
+              labels.push('bug');
+            } else if (title.includes('[feature]') || title.includes('[enhancement]') || body.includes('add') || body.includes('implement')) {
+              labels.push('enhancement');
+            } else if (title.includes('[docs]') || title.includes('[documentation]') || body.includes('readme') || body.includes('guide')) {
+              labels.push('documentation');
+            } else if (title.includes('[performance]') || body.includes('slow') || body.includes('performance') || body.includes('optimization')) {
+              labels.push('performance');
+            } else if (title.includes('[security]') || body.includes('vulnerability') || body.includes('security')) {
+              labels.push('security');
+            } else if (title.includes('[ppdb]') || body.includes('registration') || body.includes('ppdb')) {
+              labels.push('component/ppdb');
+            }
+            
+            // Component Detection
+            if (body.includes('ppdb') || body.includes('registration') || body.includes('pendaftaran')) {
+              labels.push('component/ppdb');
+            }
+            if (body.includes('frontend') || body.includes('ui') || body.includes('component')) {
+              labels.push('component/frontend');
+            }
+            if (body.includes('api') || body.includes('backend') || body.includes('server')) {
+              labels.push('component/backend');
+            }
+            if (body.includes('database') || body.includes('query') || body.includes('data')) {
+              labels.push('component/database');
+            }
+            if (body.includes('seo') || body.includes('meta') || body.includes('search')) {
+              labels.push('component/seo');
+            }
+            if (body.includes('accessibility') || body.includes('a11y') || body.includes('wcag')) {
+              labels.push('component/accessibility');
+            }
+            
+            // Context Detection
+            if (body.includes('student') || body.includes('siswa')) {
+              labels.push('context/student-facing');
+            }
+            if (body.includes('parent') || body.includes('orang tua')) {
+              labels.push('context/parent-facing');
+            }
+            if (body.includes('admin') || body.includes('administrator')) {
+              labels.push('context/admin-facing');
+            }
+            if (body.includes('teacher') || body.includes('guru') || body.includes('staff')) {
+              labels.push('context/teacher-facing');
+            }
+            
+            // Size Estimation
+            const wordCount = body.split(' ').length;
+            if (wordCount < 100) {
+              labels.push('size/small');
+            } else if (wordCount < 300) {
+              labels.push('size/medium');
+            } else {
+              labels.push('size/large');
+            }
+            
+            // Add triage status
+            labels.push('status/triage');
+            
+            // Apply labels
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labels
+              });
+            }
+            
+            // Add contextual comment
+            const priorityLabel = labels.find(l => l.startsWith('priority/'));
+            const typeLabels = labels.filter(l => ['bug', 'enhancement', 'documentation', 'performance', 'security'].includes(l));
+            const componentLabels = labels.filter(l => l.startsWith('component/'));
+            
+            let commentBody = `## 🎯 Auto-Triage Complete\n\n`;
+            commentBody += `**Priority**: ${priorityLabel || 'priority/medium'}\n`;
+            commentBody += `**Type**: ${typeLabels.join(', ') || 'general'}\n`;
+            if (componentLabels.length > 0) {
+              commentBody += `**Components**: ${componentLabels.join(', ')}\n`;
+            }
+            
+            commentBody += `\n### 📋 Next Steps:\n`;
+            commentBody += `- 🏷️ Review and adjust labels if needed\n`;
+            commentBody += `- 👥 Assign appropriate team members\n`;
+            commentBody += `- 🎯 Set milestone and priority\n`;
+            commentBody += `- 📝 Add to project board\n`;
+            
+            if (labels.includes('security')) {
+              commentBody += `\n⚠️ **Security Issue**: This will be handled according to our [security policy](../SECURITY.md)\n`;
+            }
+            
+            if (labels.includes('component/ppdb')) {
+              commentBody += `\n🎓 **PPDB System**: This affects the registration system and should be prioritized during registration periods.\n`;
+            }
+            
+            commentBody += `\n---\n*This issue was automatically triaged. Please review and update as needed.*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: commentBody
+            });
+
+  # Issue Assignment and Workflow
+  issue-workflow:
+    name: Issue Workflow Management
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' || github.event_name == 'issue_comment'
+    permissions:
+      issues: write
+      labels: write
+      
+    steps:
+      - name: Auto-assign based on labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const labels = issue.labels.map(l => l.name);
+            
+            // Define assignee mapping
+            const assigneeMap = {
+              'component/ppdb': ['sulhicmz'],
+              'component/frontend': ['sulhicmz'],
+              'component/backend': ['sulhicmz'],
+              'security': ['sulhicmz'],
+              'performance': ['sulhicmz'],
+              'documentation': ['sulhicmz']
+            };
+            
+            // Find assignees based on labels
+            let assignees = [];
+            for (const [label, labelAssignees] of Object.entries(assigneeMap)) {
+              if (labels.includes(label)) {
+                assignees = assignees.concat(labelAssignees);
+              }
+            }
+            
+            // Remove duplicates
+            assignees = [...new Set(assignees)];
+            
+            // Assign if we have assignees and no one is assigned yet
+            if (assignees.length > 0 && issue.assignees.length === 0) {
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                assignees: assignees.slice(0, 10) // GitHub limit
+              });
+            }
+
+  # Milestone Management
+  milestone-management:
+    name: Milestone Management
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+    permissions:
+      issues: write
+      milestones: read
+      
+    steps:
+      - name: Auto-set milestone based on priority
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const labels = issue.labels.map(l => l.name);
+            
+            // Get milestones
+            const milestones = await github.rest.issues.listMilestones({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            
+            if (milestones.data.length === 0) return;
+            
+            // Priority to milestone mapping
+            let targetMilestone = null;
+            if (labels.includes('priority/critical')) {
+              // Find milestone with "hotfix" or "urgent"
+              targetMilestone = milestones.data.find(m => 
+                m.title.toLowerCase().includes('hotfix') || 
+                m.title.toLowerCase().includes('urgent')
+              );
+            }
+            
+            if (!targetMilestone && labels.includes('priority/high')) {
+              // Find next milestone
+              targetMilestone = milestones.data.sort((a, b) => 
+                new Date(a.due_on || '9999-12-31') - new Date(b.due_on || '9999-12-31')
+              )[0];
+            }
+            
+            if (targetMilestone && !issue.milestone) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                milestone: targetMilestone.number
+              });
+            }
+
+  # Comment Response Automation
+  comment-automation:
+    name: Comment Response Automation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issue_comment'
+    permissions:
+      issues: write
+      
+    steps:
+      - name: Respond to common commands
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = context.payload.comment;
+            const issue = context.payload.issue;
+            const commentBody = comment.body.toLowerCase().trim();
+            
+            // Command responses
+            const responses = {
+              '/assign me': async () => {
+                await github.rest.issues.addAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  assignees: [comment.user.login]
+                });
+                return `✅ Assigned this issue to @${comment.user.login}`;
+              },
+              '/unassign me': async () => {
+                await github.rest.issues.removeAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  assignees: [comment.user.login]
+                });
+                return `✅ Unassigned @${comment.user.login} from this issue`;
+              },
+              '/status': async () => {
+                const labels = issue.labels.map(l => l.name);
+                const priority = labels.find(l => l.startsWith('priority/')) || 'Not set';
+                const status = labels.find(l => l.startsWith('status/')) || 'Not set';
+                const components = labels.filter(l => l.startsWith('component/'));
+                
+                return `## 📊 Issue Status\n\n**Priority**: ${priority}\n**Status**: ${status}\n**Components**: ${components.length > 0 ? components.join(', ') : 'None'}\n**Assignees**: ${issue.assignees.length > 0 ? issue.assignees.map(a => `@${a.login}`).join(', ') : 'None'}\n**Milestone**: ${issue.milestone ? issue.milestone.title : 'None'}`;
+              },
+              '/help': async () => {
+                return `## 🤖 Available Commands\n\n- \`/assign me\` - Assign yourself to this issue\n- \`/unassign me\` - Unassign yourself from this issue\n- \`/status\` - Show current issue status\n- \`/help\` - Show this help message\n\n### Labels Guide\n- \`priority/critical\`, \`priority/high\`, \`priority/medium\`, \`priority/low\`\n- \`status/triage\`, \`status/in-progress\`, \`status/review\`, \`status/done\`\n- \`component/ppdb\`, \`component/frontend\`, \`component/backend\`, etc.`;
+              }
+            };
+            
+            // Check if comment is a command
+            if (responses[commentBody]) {
+              const response = await responses[commentBody]();
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: response
+              });
+            }
+
+  # Daily Health Check
+  daily-health-check:
+    name: Daily Issue Health Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    permissions:
+      issues: read
+      pull_requests: read
+      
+    steps:
+      - name: Generate health report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const oneDayAgo = new Date();
+            oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+            const isoDate = oneDayAgo.toISOString();
+            
+            // Get recent activity
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              since: isoDate,
+              state: 'all'
+            });
+            
+            const openIssues = issues.data.filter(i => i.state === 'open' && !i.pull_request);
+            const closedIssues = issues.data.filter(i => i.state === 'closed' && !i.pull_request);
+            
+            // Priority breakdown
+            const priorityBreakdown = {
+              critical: openIssues.filter(i => i.labels.some(l => l.name === 'priority/critical')).length,
+              high: openIssues.filter(i => i.labels.some(l => l.name === 'priority/high')).length,
+              medium: openIssues.filter(i => i.labels.some(l => l.name === 'priority/medium')).length,
+              low: openIssues.filter(i => i.labels.some(l => l.name === 'priority/low')).length
+            };
+            
+            // Component breakdown
+            const componentBreakdown = {};
+            openIssues.forEach(issue => {
+              issue.labels.forEach(label => {
+                if (label.name.startsWith('component/')) {
+                  componentBreakdown[label.name] = (componentBreakdown[label.name] || 0) + 1;
+                }
+              });
+            });
+            
+            const healthReport = `## 🏥 Daily Repository Health Report\n\n**Date**: ${new Date().toLocaleDateString()}\n\n### 📊 Activity Summary\n- 🆕 New Issues: ${openIssues.length}\n- ✅ Closed Issues: ${closedIssues.length}\n- 📋 Total Open: ${openIssues.length}\n\n### 🎯 Priority Breakdown\n- 🔴 Critical: ${priorityBreakdown.critical}\n- 🟠 High: ${priorityBreakdown.high}\n- 🟡 Medium: ${priorityBreakdown.medium}\n- 🔵 Low: ${priorityBreakdown.low}\n\n### 🧩 Component Breakdown\n${Object.entries(componentBreakdown).map(([component, count]) => `- ${component}: ${count}`).join('\n') || '- No components tagged'}\n\n### 🚨 Action Items\n${priorityBreakdown.critical > 0 ? `- ⚠️ **${priorityBreakdown.critical} critical issues** need immediate attention` : ''}\n${priorityBreakdown.high > 3 ? `- 📈 **${priorityBreakdown.high} high priority issues** - consider capacity planning` : ''}\n${openIssues.length > 20 ? `- 📋 **${openIssues.length} open issues** - consider backlog grooming` : ''}\n\n---\n*Generated automatically on ${new Date().toLocaleString()}*`;
+            
+            // Create or update health report issue
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'automation',
+              state: 'open'
+            });
+            
+            const healthIssue = existingIssues.data.find(i => 
+              i.title.includes('Daily Repository Health Report')
+            );
+            
+            if (healthIssue) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: healthIssue.number,
+                body: healthReport
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🏥 Daily Repository Health Report - ${new Date().toLocaleDateString()}`,
+                body: healthReport,
+                labels: ['automation', 'health-report']
+              });
+            }

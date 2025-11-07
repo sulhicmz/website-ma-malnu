@@ -1,8 +1,9 @@
 // src/app/page.tsx
+import Link from 'next/link'
 import { getSiteSettings, getBeritaList, getPengumumanList } from '@/lib/fetchData'
-import { CardBerita } from '@/components/CardBerita'
-import { CardGuru } from '@/components/CardGuru'
-import { GalleryGrid } from '@/components/GalleryGrid'
+import { CardBerita } from '@/components'
+import { CardGuru } from '@/components'
+import { GalleryGrid } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -39,18 +40,18 @@ export default async function HomePage() {
             Madrasah Aliyah unggulan dengan kurikulum terkini dan fasilitas modern
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a 
+            <Link 
               href="/ppdb" 
               className="bg-white text-blue-600 hover:bg-gray-100 font-bold py-3 px-6 rounded-lg transition duration-300"
             >
               Daftar Sekarang
-            </a>
-            <a 
+            </Link>
+            <Link 
               href="/profil" 
               className="bg-transparent border-2 border-white hover:bg-white hover:text-blue-600 font-bold py-3 px-6 rounded-lg transition duration-300"
             >
               Kenali Kami
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -65,12 +66,12 @@ export default async function HomePage() {
             ))}
           </div>
           <div className="text-center mt-10">
-            <a 
+            <Link 
               href="/berita" 
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
             >
               Lihat Semua Berita
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -84,12 +85,12 @@ export default async function HomePage() {
               <ul className="space-y-4">
                 {latestPengumuman.map((pengumuman: any) => (
                   <li key={pengumuman.slug.current} className="border-b border-gray-200 pb-4 last:border-b-0">
-                    <a 
+                    <Link 
                       href={`/pengumuman/${pengumuman.slug.current}`} 
                       className="text-blue-600 hover:text-blue-800 font-medium"
                     >
                       {pengumuman.title}
-                    </a>
+                    </Link>
                     <p className="text-gray-600 text-sm mt-1">
                       {new Date(pengumuman.date).toLocaleDateString('id-ID', {
                         day: 'numeric',
@@ -105,12 +106,12 @@ export default async function HomePage() {
               <p className="text-center text-gray-500">Tidak ada pengumuman saat ini.</p>
             )}
             <div className="text-center mt-8">
-              <a 
+              <Link 
                 href="/pengumuman" 
                 className="inline-block text-blue-600 hover:text-blue-800 font-medium"
               >
                 Lihat semua pengumuman →
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -122,12 +123,12 @@ export default async function HomePage() {
           <h2 className="text-3xl font-bold text-center mb-12">Galeri Kegiatan</h2>
           <GalleryGrid />
           <div className="text-center mt-10">
-            <a 
+            <Link 
               href="/galeri" 
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
             >
               Lihat Galeri Lengkap
-            </a>
+            </Link>
           </div>
         </div>
       </section>

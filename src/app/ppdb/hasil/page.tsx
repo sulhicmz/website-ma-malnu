@@ -1,6 +1,6 @@
 // src/app/ppdb/hasil/page.tsx
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -32,7 +32,7 @@ export default async function PPDBHasilPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-lg p-8 mb-8 text-center">

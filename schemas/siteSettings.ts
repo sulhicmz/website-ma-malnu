@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'siteSettings',
@@ -21,11 +21,11 @@ export default defineType({
       name: 'keywords',
       title: 'Kata Kunci',
       type: 'array',
-      of: [{ type: 'string' }],
+      of: [defineArrayMember({ type: 'string' })],
       options: {
         layout: 'tags',
       },
-    }),
+    }, {strict: false}),
     defineField({
       name: 'logo',
       title: 'Logo',
@@ -61,7 +61,7 @@ export default defineType({
       title: 'Media Sosial',
       type: 'array',
       of: [
-        {
+        defineArrayMember({
           type: 'object',
           fields: [
             defineField({
@@ -97,26 +97,26 @@ export default defineType({
               }
             },
           },
-        },
+        }),
       ],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'workingHours',
       title: 'Jam Kerja',
       type: 'object',
       fields: [
-        {
+        defineField({
           name: 'weekdays',
           title: 'Hari Kerja',
           type: 'string',
-        },
-        {
+        }),
+        defineField({
           name: 'hours',
           title: 'Jam Kerja',
           type: 'string',
-        },
+        }),
       ],
-    }),
+    }, {strict: false}),
   ],
   preview: {
     select: {

@@ -1,6 +1,6 @@
 // src/app/ppdb/syarat/page.tsx
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -23,7 +23,7 @@ export default async function PPDBSyaratPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <article className="max-w-4xl mx-auto">
           <header className="mb-8 text-center">

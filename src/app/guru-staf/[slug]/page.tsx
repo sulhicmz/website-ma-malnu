@@ -1,6 +1,7 @@
 // src/app/guru-staf/[slug]/page.tsx
+import Link from 'next/link'
 import { getGuru, getAllGuruSlugs, getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -39,12 +40,12 @@ export default async function GuruDetailPage({ params }: { params: { slug: strin
             <p className="text-gray-600 mb-6">
               Maaf, data guru yang Anda cari tidak dapat ditemukan.
             </p>
-            <a 
+            <Link 
               href="/guru-staf" 
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
               Kembali ke Daftar Guru
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -60,7 +61,7 @@ export default async function GuruDetailPage({ params }: { params: { slug: strin
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <article className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -128,7 +129,7 @@ export default async function GuruDetailPage({ params }: { params: { slug: strin
                   <h2 className="font-bold text-gray-700 mb-2">Media Sosial</h2>
                   <div className="flex space-x-4">
                     {guru.socialMedia.map((social: any, index: number) => (
-                      <a 
+                      <Link 
                         key={index}
                         href={social.url}
                         target="_blank"
@@ -136,7 +137,7 @@ export default async function GuruDetailPage({ params }: { params: { slug: strin
                         className="text-blue-600 hover:text-blue-800"
                       >
                         {social.platform}
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </div>

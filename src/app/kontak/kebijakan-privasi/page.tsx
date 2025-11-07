@@ -1,6 +1,7 @@
 // src/app/kontak/kebijakan-privasi/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -23,7 +24,7 @@ export default async function KebijakanPrivasiPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <article className="max-w-4xl mx-auto">
           <header className="mb-8 text-center">
@@ -35,7 +36,7 @@ export default async function KebijakanPrivasiPage() {
             <div className="prose max-w-none">
               <h2>1. Pendahuluan</h2>
               <p>
-                Kebijakan Privasi ini menjelaskan bagaimana MA Malnu Kananga ("kami", "sekolah") 
+                Kebijakan Privasi ini menjelaskan bagaimana MA Malnu Kananga (&quot;kami&quot;, &quot;sekolah&quot;) 
                 mengumpulkan, menggunakan, membagikan, dan melindungi informasi pribadi Anda 
                 saat mengunjungi website kami.
               </p>
@@ -81,7 +82,7 @@ export default async function KebijakanPrivasiPage() {
               <h2>7. Hubungi Kami</h2>
               <p>
                 Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini, silakan hubungi kami 
-                melalui informasi kontak yang tersedia di halaman <a href="/kontak" className="text-blue-600 hover:text-blue-800">Kontak</a>.
+                melalui informasi kontak yang tersedia di halaman <Link href="/kontak" className="text-blue-600 hover:text-blue-800">Kontak</Link>.
               </p>
             </div>
           </div>

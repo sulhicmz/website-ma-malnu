@@ -3,7 +3,7 @@ import NewsArticleJSONLD from '@/components/seo/NewsArticleJSONLD'
 import BreadcrumbJSONLD from '@/components/seo/BreadcrumbJSONLD'
 import MetaTags from '@/components/seo/MetaTags'
 import { urlForImage } from '@/lib/image'
-import { client } from '@/lib/sanity'
+import { sanityClient as client } from '@/lib/sanity'
 import { defaultSEO } from '@/lib/seo'
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {

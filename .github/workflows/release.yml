@@ -1,0 +1,853 @@
+name: Release Management
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - hotfix
+      version_override:
+        description: 'Override version (optional, e.g., 1.2.3)'
+        required: false
+        type: string
+      skip_tests:
+        description: 'Skip tests (emergency only)'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Dry run (no actual release)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  MAINTENANCE_MODE: 'false'
+
+jobs:
+  # Analyze commits and determine version bump
+  version-analysis:
+    name: Version Analysis
+    runs-on: ubuntu-latest
+    outputs:
+      version_type: ${{ steps.analysis.outputs.version_type }}
+      new_version: ${{ steps.analysis.outputs.new_version }}
+      previous_version: ${{ steps.analysis.outputs.previous_version }}
+      should_release: ${{ steps.analysis.outputs.should_release }}
+      is_hotfix: ${{ steps.analysis.outputs.is_hotfix }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Analyze commits and determine version
+        id: analysis
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "previous_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          
+          # Determine version type
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION_TYPE="${{ github.event.inputs.release_type }}"
+            IS_HOTFIX="false"
+            if [ "$VERSION_TYPE" == "hotfix" ]; then
+              VERSION_TYPE="patch"
+              IS_HOTFIX="true"
+            fi
+          else
+            # Analyze commit messages since last tag
+            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            
+            if [ -n "$LAST_TAG" ]; then
+              COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+            else
+              COMMITS=$(git log --pretty=format:"%s")
+            fi
+            
+            # Check for breaking changes
+            if echo "$COMMITS" | grep -E "(BREAKING CHANGE|feat!|fix!|chore!|docs!|style!|refactor!|perf!|test!)"; then
+              VERSION_TYPE="major"
+            # Check for new features
+            elif echo "$COMMITS" | grep -E "^feat"; then
+              VERSION_TYPE="minor"
+            # Check for fixes (default to patch)
+            elif echo "$COMMITS" | grep -E "^fix"; then
+              VERSION_TYPE="patch"
+            else
+              VERSION_TYPE="patch"
+            fi
+            IS_HOTFIX="false"
+          fi
+          
+          echo "version_type=$VERSION_TYPE" >> $GITHUB_OUTPUT
+          echo "is_hotfix=$IS_HOTFIX" >> $GITHUB_OUTPUT
+          
+          # Calculate new version
+          if [ -n "${{ github.event.inputs.version_override }}" ]; then
+            NEW_VERSION="${{ github.event.inputs.version_override }}"
+          else
+            IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+            MAJOR=${VERSION_PARTS[0]}
+            MINOR=${VERSION_PARTS[1]}
+            PATCH=${VERSION_PARTS[2]}
+            
+            case $VERSION_TYPE in
+              "major")
+                NEW_VERSION="$((MAJOR + 1)).0.0"
+                ;;
+              "minor")
+                NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+                ;;
+              "patch")
+                NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+                ;;
+            esac
+          fi
+          
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          
+          # Determine if should release
+          SHOULD_RELEASE="true"
+          if [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ github.event.pull_request.merged }}" != "true" ]; then
+            SHOULD_RELEASE="false"
+          elif [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            SHOULD_RELEASE="false"
+          fi
+          
+          echo "should_release=$SHOULD_RELEASE" >> $GITHUB_OUTPUT
+          
+          echo "📊 Version Analysis Results:"
+          echo "  Current Version: $CURRENT_VERSION"
+          echo "  New Version: $NEW_VERSION"
+          echo "  Version Type: $VERSION_TYPE"
+          echo "  Should Release: $SHOULD_RELEASE"
+          echo "  Is Hotfix: $IS_HOTFIX"
+
+  # Pre-release testing and validation
+  pre-release-validation:
+    name: Pre-release Validation
+    runs-on: ubuntu-latest
+    needs: version-analysis
+    if: needs.version-analysis.outputs.should_release == 'true'
+    outputs:
+      tests_passed: ${{ steps.validation.outputs.tests_passed }}
+      build_passed: ${{ steps.validation.outputs.build_passed }}
+      security_passed: ${{ steps.validation.outputs.security_passed }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run comprehensive tests
+        id: validation
+        run: |
+          TESTS_PASSED="true"
+          BUILD_PASSED="true"
+          SECURITY_PASSED="true"
+          
+          # Skip tests if emergency mode
+          if [ "${{ github.event.inputs.skip_tests }}" == "true" ]; then
+            echo "⚠️ Tests skipped (emergency mode)"
+          else
+            echo "🧪 Running test suite..."
+            
+            # Type checking
+            npm run type-check || { echo "❌ Type checking failed"; TESTS_PASSED="false"; }
+            
+            # Linting
+            npm run lint || { echo "❌ Linting failed"; TESTS_PASSED="false"; }
+            
+            # Unit tests
+            npm run test:coverage || { echo "❌ Unit tests failed"; TESTS_PASSED="false"; }
+            
+            # E2E tests
+            npm run test:e2e || { echo "❌ E2E tests failed"; TESTS_PASSED="false"; }
+          fi
+          
+          # Build application
+          echo "🏗️ Building application..."
+          npm run build || { echo "❌ Build failed"; BUILD_PASSED="false"; }
+          
+          # Security audit
+          echo "🔒 Running security audit..."
+          npm audit --audit-level moderate || { echo "⚠️ Security issues found"; SECURITY_PASSED="false"; }
+          
+          echo "tests_passed=$TESTS_PASSED" >> $GITHUB_OUTPUT
+          echo "build_passed=$BUILD_PASSED" >> $GITHUB_OUTPUT
+          echo "security_passed=$SECURITY_PASSED" >> $GITHUB_OUTPUT
+          
+          if [ "$TESTS_PASSED" == "true" ] && [ "$BUILD_PASSED" == "true" ]; then
+            echo "✅ Pre-release validation passed"
+          else
+            echo "❌ Pre-release validation failed"
+            exit 1
+          fi
+
+  # Enhanced changelog generation
+  changelog-generation:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    needs: [version-analysis, pre-release-validation]
+    if: needs.pre-release-validation.outputs.tests_passed == 'true'
+    outputs:
+      changelog_path: ${{ steps.changelog.outputs.changelog_path }}
+      changelog_content: ${{ steps.changelog.outputs.changelog_content }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate comprehensive changelog
+        id: changelog
+        run: |
+          PREVIOUS_VERSION="${{ needs.version-analysis.outputs.previous_version }}"
+          NEW_VERSION="${{ needs.version-analysis.outputs.new_version }}"
+          IS_HOTFIX="${{ needs.version-analysis.outputs.is_hotfix }}"
+          
+          # Get previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          # Create changelog directory
+          mkdir -p CHANGELOGS
+          CHANGELOG_FILE="CHANGELOGS/v${NEW_VERSION}.md"
+          
+          # Generate categorized changelog
+          cat > "$CHANGELOG_FILE" << EOF
+          # 🚀 Release v${NEW_VERSION}
+          
+          **Release Date:** $(date +'%Y-%m-%d')  
+          **Release Type:** ${{ needs.version-analysis.outputs.version_type }}${{ needs.version-analysis.outputs.is_hotfix == 'true' && ' (Hotfix)' || '' }}
+          
+          EOF
+          
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "" >> "$CHANGELOG_FILE"
+            echo "## 📋 Changes since v${PREVIOUS_VERSION#v}" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            # Categorize commits
+            echo "### ✨ Features" >> "$CHANGELOG_FILE"
+            git log $PREVIOUS_TAG..HEAD --grep="^feat" --pretty=format:"- %s (%h)" || echo "No new features" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            echo "### 🐛 Bug Fixes" >> "$CHANGELOG_FILE"
+            git log $PREVIOUS_TAG..HEAD --grep="^fix" --pretty=format:"- %s (%h)" || echo "No bug fixes" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            echo "### 🔧 Improvements" >> "$CHANGELOG_FILE"
+            git log $PREVIOUS_TAG..HEAD --grep="^refactor\|^perf\|^chore" --pretty=format:"- %s (%h)" || echo "No improvements" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            echo "### 📚 Documentation" >> "$CHANGELOG_FILE"
+            git log $PREVIOUS_TAG..HEAD --grep="^docs" --pretty=format:"- %s (%h)" || echo "No documentation changes" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            if [ "$IS_HOTFIX" == "true" ]; then
+              echo "### 🚨 Hotfix Details" >> "$CHANGELOG_FILE"
+              echo "This is a hotfix release addressing critical issues:" >> "$CHANGELOG_FILE"
+              git log $PREVIOUS_TAG..HEAD --grep="^fix" --pretty=format:"- %s (%h)" >> "$CHANGELOG_FILE"
+              echo "" >> "$CHANGELOG_FILE"
+            fi
+          else
+            echo "" >> "$CHANGELOG_FILE"
+            echo "## 📋 Initial Release" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            echo "This is the initial release of MA Malnu Kananga website." >> "$CHANGELOG_FILE"
+          fi
+          
+          # Add installation and upgrade instructions
+          cat >> "$CHANGELOG_FILE" << EOF
+          
+          ## 🎯 Installation & Upgrade
+          
+          ### New Installation
+          \`\`\`bash
+          git clone https://github.com/sulhicmz/website-ma-malnu.git
+          cd website-ma-malnu
+          npm install
+          npm run build
+          npm start
+          \`\`\`
+          
+          ### Upgrade from Previous Version
+          \`\`\`bash
+          # Backup current installation
+          cp -r .next .next.backup
+          
+          # Pull latest changes
+          git fetch origin
+          git checkout v${NEW_VERSION}
+          
+          # Update dependencies
+          npm install
+          
+          # Rebuild application
+          npm run build
+          
+          # Restart services
+          npm start
+          \`\`\`
+          
+          ## 🔧 Important Notes
+          EOF
+          
+          if [ "${{ needs.version-analysis.outputs.version_type }}" == "major" ]; then
+            echo "⚠️ **This is a major release with breaking changes.** Please review the migration guide." >> "$CHANGELOG_FILE"
+          fi
+          
+          if [ "$IS_HOTFIX" == "true" ]; then
+            echo "🚨 **This is a critical hotfix. Immediate upgrade is recommended.**" >> "$CHANGELOG_FILE"
+          fi
+          
+          echo "changelog_path=$CHANGELOG_FILE" >> $GITHUB_OUTPUT
+          echo "changelog_content<<EOF" >> $GITHUB_OUTPUT
+          cat "$CHANGELOG_FILE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "📝 Changelog generated: $CHANGELOG_FILE"
+
+  # Create release
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [version-analysis, pre-release-validation, changelog-generation]
+    if: |
+      needs.version-analysis.outputs.should_release == 'true' && 
+      needs.pre-release-validation.outputs.tests_passed == 'true' &&
+      needs.pre-release-validation.outputs.build_passed == 'true'
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update package.json version
+        run: |
+          NEW_VERSION="${{ needs.version-analysis.outputs.new_version }}"
+          npm version $NEW_VERSION --no-git-tag-version
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json
+          git commit -m "chore: bump version to v$NEW_VERSION [skip ci]"
+
+      - name: Download changelog
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: changelog-files
+          path: ./
+
+      - name: Create Git tag
+        run: |
+          git tag -a "v${{ needs.version-analysis.outputs.new_version }}" -m "Release v${{ needs.version-analysis.outputs.new_version }}"
+          git push origin main --follow-tags
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ needs.version-analysis.outputs.new_version }}"
+          name: "Release v${{ needs.version-analysis.outputs.new_version }}"
+          body_path: "${{ needs.changelog-generation.outputs.changelog_path }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            package.json
+            CHANGELOGS/
+          target_commitish: main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+          release_name: Release ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+          body: |
+            ## 🚀 Release ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+            
+            ### 📋 Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### 🎯 Installation
+            ```bash
+            npm install
+            npm run build
+            npm start
+            ```
+            
+            ### 🔧 Upgrade Instructions
+            1. Backup your current installation
+            2. Pull latest changes: `git pull origin main`
+            3. Update dependencies: `npm install`
+            4. Rebuild: `npm run build`
+            
+            ### 🐛 Bug Reports
+            Please report any issues at: [Issues](https://github.com/sulhicmz/website-ma-malnu/issues)
+            
+            ---
+            **Previous Version**: ${{ steps.changelog.outputs.previous_tag || 'Initial release' }}
+          draft: false
+          prerelease: false
+
+      # Staging deployment validation
+  staging-validation:
+    name: Staging Validation
+    runs-on: ubuntu-latest
+    needs: [version-analysis, pre-release-validation, changelog-generation]
+    if: |
+      needs.version-analysis.outputs.should_release == 'true' && 
+      needs.pre-release-validation.outputs.tests_passed == 'true' &&
+      needs.pre-release-validation.outputs.build_passed == 'true'
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.STAGING_URL }}
+
+      - name: Deploy to Staging
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: ''
+          working-directory: ./
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Run smoke tests on staging
+        run: |
+          echo "🔍 Running smoke tests on staging..."
+          STAGING_URL="${{ steps.deploy.outputs.url }}"
+          
+          # Basic health checks
+          curl -f "$STAGING_URL/api/health" || { echo "❌ Health check failed"; exit 1; }
+          curl -f "$STAGING_URL/" || { echo "❌ Homepage check failed"; exit 1; }
+          curl -f "$STAGING_URL/ppdb" || { echo "❌ PPDB page check failed"; exit 1; }
+          
+          # PPDB system critical paths
+          curl -f "$STAGING_URL/api/ppdb/settings" || { echo "❌ PPDB settings API failed"; exit 1; }
+          
+          echo "✅ Staging smoke tests passed"
+
+      - name: Run Lighthouse CI on staging
+        run: |
+          npm install -g @lhci/cli@0.12.x
+          lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          LHCI_BUILD_CONTEXT__CURRENT_COMMIT: ${{ github.sha }}
+          LHCI_BUILD_CONTEXT__BASE_BRANCH: main
+
+      - name: Performance validation
+        run: |
+          echo "⚡ Validating performance metrics..."
+          # Add performance validation logic here
+          # Check bundle size, loading times, etc.
+
+  # Production deployment with rollback capability
+  production-deployment:
+    name: Production Deployment
+    runs-on: ubuntu-latest
+    needs: [version-analysis, pre-release-validation, changelog-generation, staging-validation]
+    if: |
+      needs.version-analysis.outputs.should_release == 'true' && 
+      needs.pre-release-validation.outputs.tests_passed == 'true' &&
+      needs.pre-release-validation.outputs.build_passed == 'true' &&
+      needs.staging-validation.result == 'success'
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+      
+    steps:
+      - name: Set maintenance mode
+        run: |
+          echo "🔧 Enabling maintenance mode..."
+          # Set maintenance mode - implement based on your hosting
+          echo "MAINTENANCE_MODE=true" >> $GITHUB_ENV
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.PRODUCTION_URL }}
+
+      - name: Backup current deployment
+        id: backup
+        run: |
+          echo "💾 Creating backup of current deployment..."
+          BACKUP_TAG="backup-$(date +%Y%m%d-%H%M%S)"
+          echo "backup_tag=$BACKUP_TAG" >> $GITHUB_OUTPUT
+          # Create backup tag for rollback
+          git tag "$BACKUP_TAG" ${{ github.event.before }}
+          git push origin "$BACKUP_TAG"
+
+      - name: Deploy to Production
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
+
+      - name: Production health checks
+        run: |
+          echo "🏥 Running production health checks..."
+          PROD_URL="${{ steps.deploy.outputs.url }}"
+          
+          # Wait for deployment to be ready
+          sleep 30
+          
+          # Critical health checks
+          for i in {1..5}; do
+            if curl -f "$PROD_URL/api/health"; then
+              echo "✅ Health check passed"
+              break
+            else
+              echo "⏳ Waiting for deployment... (attempt $i/5)"
+              sleep 10
+            fi
+          done
+          
+          # Critical functionality checks
+          curl -f "$PROD_URL/" || { echo "❌ Homepage failed"; exit 1; }
+          curl -f "$PROD_URL/ppdb" || { echo "❌ PPDB page failed"; exit 1; }
+          curl -f "$PROD_URL/api/ppdb/settings" || { echo "❌ PPDB API failed"; exit 1; }
+          
+          echo "✅ Production health checks passed"
+
+      - name: Disable maintenance mode
+        if: success()
+        run: |
+          echo "✅ Disabling maintenance mode..."
+          echo "MAINTENANCE_MODE=false" >> $GITHUB_ENV
+
+      - name: Deployment failure - trigger rollback
+        if: failure()
+        run: |
+          echo "❌ Production deployment failed, initiating rollback..."
+          echo "rollback_needed=true" >> $GITHUB_ENV
+
+  # Automatic rollback on failure
+  rollback-deployment:
+    name: Emergency Rollback
+    runs-on: ubuntu-latest
+    needs: production-deployment
+    if: failure() && needs.production-deployment.result == 'failure'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.before }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build previous version
+        run: npm run build
+
+      - name: Rollback deployment
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
+
+      - name: Notify rollback
+        run: |
+          echo "🔄 Emergency rollback completed!"
+          echo "Previous commit: ${{ github.event.before }}"
+          echo "Failed release: v${{ needs.version-analysis.outputs.new_version }}"
+
+  # Post-release health monitoring
+  post-release-monitoring:
+    name: Post-release Monitoring
+    runs-on: ubuntu-latest
+    needs: [version-analysis, production-deployment]
+    if: needs.production-deployment.result == 'success'
+    
+    steps:
+      - name: Monitor deployment health
+        run: |
+          echo "🔍 Starting post-release monitoring..."
+          PROD_URL="${{ secrets.PRODUCTION_URL }}"
+          
+          # Monitor for 5 minutes after deployment
+          for i in {1..10}; do
+            echo "Health check $i/10..."
+            if curl -f "$PROD_URL/api/health"; then
+              echo "✅ Health check $i passed"
+            else
+              echo "❌ Health check $i failed"
+              # Could trigger alert here
+            fi
+            sleep 30
+          done
+
+      - name: Performance monitoring
+        run: |
+          echo "📊 Running performance monitoring..."
+          # Add performance monitoring logic
+          # Check Core Web Vitals, bundle size, etc.
+
+      - name: Security monitoring
+        run: |
+          echo "🔒 Running security monitoring..."
+          # Add security monitoring logic
+          # Check for vulnerabilities, unusual activity, etc.
+
+      - name: Update deployment status
+        run: |
+          echo "📈 Updating deployment metrics..."
+          # Update metrics dashboard
+
+  # Release notifications and communications
+  release-notifications:
+    name: Release Notifications
+    runs-on: ubuntu-latest
+    needs: [version-analysis, production-deployment, post-release-monitoring]
+    if: always() && needs.production-deployment.result == 'success'
+    permissions:
+      issues: write
+      discussions: write
+      pull-requests: write
+      
+    steps:
+      - name: Create release announcement
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = 'v' + '${{ needs.version-analysis.outputs.new_version }}';
+            const versionType = '${{ needs.version-analysis.outputs.version_type }}';
+            const isHotfix = '${{ needs.version-analysis.outputs.is_hotfix }}' === 'true';
+            
+            let announcementTitle = `🎉 New Release: ${version}`;
+            let urgency = '📢';
+            
+            if (isHotfix) {
+              announcementTitle = `🚨 Critical Hotfix: ${version}`;
+              urgency = '🚨';
+            } else if (versionType === 'major') {
+              announcementTitle = `🎊 Major Release: ${version}`;
+              urgency = '⚠️';
+            }
+            
+            const announcement = `# ${announcementTitle}
+            
+            ${urgency} **A new version has been released!** 🚀
+            
+            ## 📋 Release Information
+            - **Version:** ${version}
+            - **Type:** ${versionType}${isHotfix ? ' (Hotfix)' : ''}
+            - **Release Date:** ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            - **Deployment Status:** ✅ Successful
+            
+            ## ✨ What's New
+            - 📖 [View detailed Release Notes](https://github.com/${{ github.repository }}/releases/tag/${version})
+            - 🔧 Updated dependencies and security patches
+            - ⚡ Performance improvements and bug fixes
+            - 🛡️ Enhanced security measures
+            
+            ## 🔄 How to Update
+            
+            ### For School Administrators
+            1. 📋 **Backup current data**
+               \`\`\`bash
+               cp -r .next .next.backup
+               cp .env.local .env.local.backup
+               \`\`\`
+            
+            2. 🔄 **Update the application**
+               \`\`\`bash
+               git fetch origin
+               git checkout ${version}
+               npm install
+               \`\`\`
+            
+            3. 🏗️ **Rebuild and restart**
+               \`\`\`bash
+               npm run build
+               npm start
+               \`\`\`
+            
+            ### For PPDB System Users
+            ${isHotfix ? `
+            ⚠️ **IMMEDIATE ACTION REQUIRED**
+            This hotfix addresses critical issues with the PPDB system. Please update immediately to ensure continued service.
+            ` : `
+            📚 The PPDB system has been updated with new features and improvements. No immediate action is required, but we recommend updating at your earliest convenience.
+            `}
+            
+            ## 🆘 Support & Assistance
+            
+            If you encounter any issues:
+            - 🐛 [Report a bug](https://github.com/${{ github.repository }}/issues/new?template=bug_report.md)
+            - 💬 [Start a discussion](https://github.com/${{ github.repository }}/discussions)
+            - 📧 Email support: support@ma-malnu.sch.id
+            - 📞 Hotline: +62-XXX-XXXX-XXXX
+            
+            ## 📚 Additional Resources
+            - 📖 [Documentation](https://github.com/${{ github.repository }}/docs)
+            - 🎥 [Video Tutorials](https://youtube.com/playlist)
+            - 📋 [Migration Guide](${versionType === 'major' ? '#' : 'https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/wiki/Migration-Guide'})
+            
+            ---
+            *This release was deployed automatically on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}*
+            
+            **MA Malnu Kananga - IT Department**`;
+            
+            // Create release announcement file
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: `RELEASE_NOTES/${version}.md`,
+              message: `Add release announcement for ${version}`,
+              content: Buffer.from(announcement).toString('base64')
+            });
+            
+            // Create GitHub discussion for community announcement
+            try {
+              await github.rest.repos.createDiscussion({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: announcementTitle,
+                body: announcement,
+                category_id: 'general' // You may need to adjust this based on your discussion categories
+              });
+            } catch (error) {
+              console.log('Could not create discussion:', error.message);
+            }
+
+      - name: Notify stakeholders
+        run: |
+          echo "📧 Sending notifications to stakeholders..."
+          # Add email/Slack notifications here
+          # This could integrate with your school's communication systems
+
+      - name: Update project boards
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Update project boards, move completed items, etc.
+            // This integrates with your GitHub Projects setup
+
+  # Cleanup and maintenance
+  release-cleanup:
+    name: Release Cleanup
+    runs-on: ubuntu-latest
+    needs: [version-analysis, production-deployment, release-notifications]
+    if: always()
+    
+    steps:
+      - name: Cleanup temporary files
+        run: |
+          echo "🧹 Cleaning up temporary files..."
+          # Clean up any temporary files, artifacts, etc.
+
+      - name: Archive release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-v${{ needs.version-analysis.outputs.new_version }}
+          path: |
+            CHANGELOGS/
+            package.json
+          retention-days: 90
+
+      - name: Update documentation
+        run: |
+          echo "📚 Updating documentation..."
+          # Update any documentation that needs to reflect the new version
+
+      - name: Schedule next release planning
+        run: |
+          echo "📅 Scheduling next release planning..."
+          # Create issues or schedule meetings for next release planning

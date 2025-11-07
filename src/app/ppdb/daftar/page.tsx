@@ -1,6 +1,6 @@
 // src/app/ppdb/daftar/page.tsx
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -23,7 +23,7 @@ export default async function PPDBDaftarPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg p-8 mb-8 text-center">

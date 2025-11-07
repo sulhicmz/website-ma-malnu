@@ -1,8 +1,8 @@
 // src/app/berita/page.tsx
 import { getBeritaList, getSiteSettings } from '@/lib/fetchData'
-import { CardBerita } from '@/components/CardBerita'
-import { Pagination } from '@/components/Pagination'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { CardBerita } from '@/components'
+import { Pagination } from '@/components'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -38,7 +38,7 @@ export default async function BeritaPage({
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <h1 className="text-3xl font-bold mb-8 text-center">Berita Sekolah</h1>
         

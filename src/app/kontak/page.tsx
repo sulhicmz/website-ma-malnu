@@ -1,6 +1,7 @@
 // src/app/kontak/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import GoogleMapEmbed from '@/components/GoogleMapEmbed'
 
@@ -24,7 +25,7 @@ export default async function KontakPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <h1 className="text-3xl font-bold mb-8 text-center">Kontak Kami</h1>
         
@@ -169,12 +170,12 @@ export default async function KontakPage() {
                 title="Lokasi MA Malnu Kananga"
                 height="300px"
               />
-              <a 
+              <Link 
                 href="/kontak/lokasi" 
                 className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
               >
                 Lihat detail lokasi →
-              </a>
+              </Link>
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -182,12 +183,12 @@ export default async function KontakPage() {
               <p className="text-gray-700 mb-4">
                 Pertanyaan yang sering diajukan oleh orang tua siswa dan calon siswa.
               </p>
-              <a 
+              <Link 
                 href="/kontak/faq" 
                 className="inline-block text-blue-600 hover:text-blue-800 font-medium"
               >
                 Lihat FAQ →
-              </a>
+              </Link>
             </div>
           </div>
         </div>

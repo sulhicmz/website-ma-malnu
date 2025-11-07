@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'pengumuman',
@@ -45,15 +45,15 @@ export default defineType({
       title: 'Isi Pengumuman',
       type: 'array',
       of: [
-        { type: 'block' },
-        {
+        defineArrayMember({ type: 'block' }),
+        defineArrayMember({
           type: 'image',
           options: { hotspot: true },
-        },
-        { type: 'file' },
+        }),
+        defineArrayMember({ type: 'file' }),
       ],
       validation: (Rule) => Rule.required(),
-    }),
+    }, {strict: false}),
     defineField({
       name: 'attachment',
       title: 'Lampiran',

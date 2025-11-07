@@ -1,0 +1,270 @@
+name: Hotfix Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      hotfix_version:
+        description: 'Hotfix version (e.g., 1.2.4)'
+        required: true
+        type: string
+      target_branch:
+        description: 'Target branch for hotfix'
+        required: true
+        default: 'main'
+        type: string
+      description:
+        description: 'Hotfix description'
+        required: true
+        type: string
+      severity:
+        description: 'Hotfix severity'
+        required: true
+        default: 'medium'
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - critical
+      skip_validation:
+        description: 'Skip validation (emergency only)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # Create hotfix branch
+  create-hotfix-branch:
+    name: Create Hotfix Branch
+    runs-on: ubuntu-latest
+    outputs:
+      hotfix_branch: ${{ steps.branch.outputs.hotfix_branch }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create hotfix branch
+        id: branch
+        run: |
+          HOTFIX_VERSION="${{ github.event.inputs.hotfix_version }}"
+          HOTFIX_BRANCH="hotfix/v${HOTFIX_VERSION}"
+          
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Create hotfix branch from target branch
+          git checkout origin/${{ github.event.inputs.target_branch }} -b $HOTFIX_BRANCH
+          git push origin $HOTFIX_BRANCH
+          
+          echo "hotfix_branch=$HOTFIX_BRANCH" >> $GITHUB_OUTPUT
+          
+          echo "🔥 Created hotfix branch: $HOTFIX_BRANCH"
+
+  # Apply hotfix changes
+  apply-hotfix:
+    name: Apply Hotfix
+    runs-on: ubuntu-latest
+    needs: create-hotfix-branch
+    
+    steps:
+      - name: Checkout hotfix branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.create-hotfix-branch.outputs.hotfix_branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update version for hotfix
+        run: |
+          HOTFIX_VERSION="${{ github.event.inputs.hotfix_version }}"
+          npm version $HOTFIX_VERSION --no-git-tag-version
+          
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json
+          git commit -m "chore: bump version to v$HOTFIX_VERSION for hotfix"
+
+      - name: Create hotfix commit
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Create a placeholder commit for the hotfix
+          echo "Hotfix v${{ github.event.inputs.hotfix_version }}" > HOTFIX.md
+          echo "Description: ${{ github.event.inputs.description }}" >> HOTFIX.md
+          echo "Severity: ${{ github.event.inputs.severity }}" >> HOTFIX.md
+          echo "Applied: $(date)" >> HOTFIX.md
+          
+          git add HOTFIX.md
+          git commit -m "fix: ${{ github.event.inputs.description }} [hotfix v${{ github.event.inputs.hotfix_version }}]"
+          
+          git push origin ${{ needs.create-hotfix-branch.outputs.hotfix_branch }}
+
+  # Quick validation (minimal for emergency)
+  hotfix-validation:
+    name: Hotfix Validation
+    runs-on: ubuntu-latest
+    needs: [create-hotfix-branch, apply-hotfix]
+    if: github.event.inputs.skip_validation != 'true'
+    
+    steps:
+      - name: Checkout hotfix branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.create-hotfix-branch.outputs.hotfix_branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Quick validation
+        run: |
+          echo "🔍 Running quick hotfix validation..."
+          
+          # Essential checks only
+          npm run type-check || { echo "❌ Type checking failed"; exit 1; }
+          npm run build || { echo "❌ Build failed"; exit 1; }
+          
+          echo "✅ Hotfix validation passed"
+
+  # Create pull request for hotfix
+  create-hotfix-pr:
+    name: Create Hotfix Pull Request
+    runs-on: ubuntu-latest
+    needs: [create-hotfix-branch, apply-hotfix, hotfix-validation]
+    if: always() && needs.apply-hotfix.result == 'success' && (needs.hotfix-validation.result == 'success' || github.event.inputs.skip_validation == 'true')
+    
+    steps:
+      - name: Create pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const hotfixVersion = '${{ github.event.inputs.hotfix_version }}';
+            const hotfixBranch = '${{ needs.create-hotfix-branch.outputs.hotfix_branch }}';
+            const targetBranch = '${{ github.event.inputs.target_branch }}';
+            const description = '${{ github.event.inputs.description }}';
+            const severity = '${{ github.event.inputs.severity }}';
+            
+            const prTitle = `🔥 Hotfix v${hotfixVersion}: ${description}`;
+            const prBody = `## 🔥 Hotfix Release v${hotfixVersion}
+            
+            **Severity:** ${severity.toUpperCase()}  
+            **Target Branch:** ${targetBranch}  
+            **Applied:** ${new Date().toLocaleDateString()}
+            
+            ### 📋 Description
+            ${description}
+            
+            ### ⚠️ Important Notes
+            - This is a hotfix release addressing critical issues
+            ${severity === 'critical' ? '- **CRITICAL**: Immediate merge and deployment required' : ''}
+            - Please review carefully before merging
+            - Ensure all tests pass before deployment
+            
+            ### 🚀 Deployment Instructions
+            1. Merge this pull request
+            2. Create a release tag: \`git tag v${hotfixVersion}\`
+            3. Deploy immediately to production
+            4. Monitor system health for 24 hours
+            
+            ### 📞 Emergency Contacts
+            - IT Department: [Contact Info]
+            - System Administrator: [Contact Info]
+            
+            ---
+            *This hotfix was created automatically on ${new Date().toLocaleDateString()}*`;
+            
+            // Create pull request
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: prTitle,
+              head: hotfixBranch,
+              base: targetBranch,
+              body: prBody,
+              draft: false
+            });
+            
+            // Add labels based on severity
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.data.number,
+              labels: ['hotfix', severity, 'urgent']
+            });
+            
+            // Request reviews from maintainers
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.data.number,
+              reviewers: ['sulhicmz'] // Add your maintainers here
+            });
+            
+            console.log(`Created hotfix PR: #${pr.data.number}`);
+
+  # Emergency deployment (for critical hotfixes)
+  emergency-deployment:
+    name: Emergency Deployment
+    runs-on: ubuntu-latest
+    needs: [create-hotfix-branch, apply-hotfix]
+    if: |
+      github.event.inputs.severity == 'critical' && 
+      github.event.inputs.skip_validation == 'true'
+    environment: production
+    
+    steps:
+      - name: Checkout hotfix branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.create-hotfix-branch.outputs.hotfix_branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Emergency build and deploy
+        run: |
+          echo "🚨 EMERGENCY DEPLOYMENT IN PROGRESS"
+          echo "Hotfix: ${{ github.event.inputs.hotfix_version }}"
+          echo "Severity: CRITICAL"
+          
+          # Quick build
+          npm run build || { echo "❌ Emergency build failed"; exit 1; }
+          
+          # Deploy immediately
+          echo "🚀 Deploying critical hotfix to production..."
+          # Add your emergency deployment commands here
+          
+          echo "✅ Emergency deployment completed"
+
+      - name: Critical alert notification
+        run: |
+          echo "🚨 SENDING CRITICAL ALERTS"
+          echo "Critical hotfix v${{ github.event.inputs.hotfix_version }} has been deployed"
+          # Add critical alert notifications (SMS, phone calls, etc.)

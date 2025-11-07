@@ -1,6 +1,7 @@
 // src/app/galeri/[slug]/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -33,7 +34,7 @@ export default async function GaleriAlbumPage({ params }: { params: { slug: stri
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <article className="max-w-6xl mx-auto">
           <header className="mb-8 text-center">
@@ -50,7 +51,7 @@ export default async function GaleriAlbumPage({ params }: { params: { slug: stri
           </div>
           
           <div className="mt-8 flex justify-between">
-            <a 
+            <Link 
               href="/galeri" 
               className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
             >
@@ -58,7 +59,7 @@ export default async function GaleriAlbumPage({ params }: { params: { slug: stri
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
               </svg>
               Kembali ke Galeri
-            </a>
+            </Link>
           </div>
         </article>
       </div>

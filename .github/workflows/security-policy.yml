@@ -1,0 +1,204 @@
+name: Security Policy Enforcement
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security checks daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  security-scan:
+    name: Comprehensive Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=moderate --json > npm-audit.json || true
+          node scripts/security-audit-parser.js npm-audit.json
+        continue-on-error: true
+
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+      - name: Upload Snyk results
+        uses: snyk/actions/upload-sarif@master
+        if: always()
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          sarif-file: 'snyk.sarif'
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          languages: javascript, typescript
+
+      - name: Run Semgrep security scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/javascript
+            p/typescript
+          generate-sarif: '1'
+
+      - name: Upload Semgrep results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+
+      - name: Check for hardcoded secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: Security score calculation
+        id: security-score
+        run: |
+          # Calculate security score based on scan results
+          score=100
+          
+          # Check for critical vulnerabilities
+          if [ -f "npm-audit.json" ]; then
+            critical=$(cat npm-audit.json | jq '.vulnerabilities | map(select(.severity == "critical")) | length' || echo 0)
+            high=$(cat npm-audit.json | jq '.vulnerabilities | map(select(.severity == "high")) | length' || echo 0)
+            moderate=$(cat npm-audit.json | jq '.vulnerabilities | map(select(.severity == "moderate")) | length' || echo 0)
+            
+            score=$((score - (critical * 20) - (high * 10) - (moderate * 5)))
+          fi
+          
+          if [ $score -lt 0 ]; then score=0; fi
+          echo "score=$score" >> $GITHUB_OUTPUT
+
+      - name: Security summary
+        run: |
+          echo "## 🔒 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Security Score**: ${{ steps.security-score.outputs.score }}/100" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Scan Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ CodeQL Analysis: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Dependency Audit: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Secret Scanning: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ SAST Analysis: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Security Metrics:" >> $GITHUB_STEP_SUMMARY
+          echo "- Scan Duration: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Check for outdated dependencies
+        run: |
+          npm outdated --json > outdated.json || true
+          node scripts/dependency-manager.js outdated
+
+      - name: Bundle size analysis
+        run: |
+          npm run build
+          npm run deps:bundle
+
+      - name: License compliance check
+        run: |
+          npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC' --excludePrivatePackages || true
+
+  security-policy-check:
+    name: Security Policy Compliance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      
+    steps:
+      - name: Check security policy compliance
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+            
+            // Check for sensitive file changes
+            const sensitiveFiles = files.data.filter(file => 
+              file.filename.includes('.env') ||
+              file.filename.includes('secret') ||
+              file.filename.includes('key') ||
+              file.filename.includes('password')
+            );
+            
+            if (sensitiveFiles.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: `## 🔒 Security Policy Alert
+                
+                ⚠️ **Sensitive files detected in this PR:**
+                ${sensitiveFiles.map(f => `- \`${f.filename}\``).join('\n')}
+                
+                ### 🚨 Security Requirements:
+                - Ensure no secrets are committed
+                - Use environment variables for sensitive data
+                - Review .gitignore configuration
+                - Update documentation if needed
+                
+                Please review and address these security concerns before merging.`
+              });
+            }

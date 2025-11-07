@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'page',
@@ -40,15 +40,15 @@ export default defineType({
       title: 'Konten',
       type: 'array',
       of: [
-        { type: 'block' },
-        {
+        defineArrayMember({ type: 'block' }),
+        defineArrayMember({
           type: 'image',
           options: { hotspot: true },
-        },
-        { type: 'ctaSection' },
-        { type: 'statsSection' },
+        }),
+        defineArrayMember({ type: 'ctaSection' }),
+        defineArrayMember({ type: 'statsSection' }),
       ],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'publishedAt',
       title: 'Tanggal Publikasi',

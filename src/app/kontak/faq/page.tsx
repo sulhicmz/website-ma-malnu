@@ -1,6 +1,7 @@
 // src/app/kontak/faq/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -47,7 +48,7 @@ export default async function FAQPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <div className="max-w-4xl mx-auto">
           <header className="mb-8 text-center">
@@ -69,7 +70,7 @@ export default async function FAQPage() {
               <p className="text-gray-700 mb-4">
                 Tidak menemukan jawaban yang Anda cari?
               </p>
-              <a 
+              <Link 
                 href="/kontak" 
                 className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               >
@@ -77,7 +78,7 @@ export default async function FAQPage() {
                 <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

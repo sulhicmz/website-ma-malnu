@@ -1,0 +1,155 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "@typescript-eslint/recommended",
+    "plugin:security/recommended"
+  ],
+  "plugins": [
+    "security",
+    "@typescript-eslint"
+  ],
+  "env": {
+    "browser": true,
+    "es2022": true,
+    "node": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    // Security-specific rules
+    "security/detect-buffer-noassert": "error",
+    "security/detect-child-process": "warn",
+    "security/detect-disable-mustache-escape": "error",
+    "security/detect-eval-with-expression": "error",
+    "security/detect-new-buffer": "error",
+    "security/detect-no-csrf-before-method-override": "error",
+    "security/detect-non-literal-fs-filename": "warn",
+    "security/detect-non-literal-regexp": "warn",
+    "security/detect-non-literal-require": "warn",
+    "security/detect-object-injection": "warn",
+    "security/detect-possible-timing-attacks": "warn",
+    "security/detect-pseudoRandomBytes": "error",
+    "security/detect-unsafe-regex": "error",
+    
+    // Additional security rules for Node.js
+    "security/detect-bidi-characters": "error",
+    "security/detect-exponential-assignment": "warn",
+    "security/detect-legacy-protocol": "error",
+    "security/detect-missing-encapsulation": "warn",
+    "security/detect-missing-rate-limit": "warn",
+    "security/detect-mixed-content": "error",
+    "security/detect-mongodb-no-sql-injection": "error",
+    "security/detect-multiple-instances": "warn",
+    "security/detect-needs-exit": "warn",
+    "security/detect-no-cors": "warn",
+    "security/detect-non-https": "error",
+    "security/detect-non-literal-fs-filename": "warn",
+    "security/detect-non-literal-import": "warn",
+    "security/detect-non-literal-require": "warn",
+    "security/detect-non-literal-regexp": "warn",
+    "security/detect-non-literal-url": "warn",
+    "security/detect-non-secure-random": "error",
+    "security/detect-non-secure-temp-file": "warn",
+    "security/detect-non-secure-webrtc": "error",
+    "security/detect-possible-timing-attacks": "warn",
+    "security/detect-process-argv": "warn",
+    "security/detect-prototype-pollution": "error",
+    "security/detect-pseudoRandomBytes": "error",
+    "security/detect-unsafe-regex": "error",
+    "security/detect-weak-crypto": "error",
+    "security/detect-weak-hash": "error",
+    "security/detect-weak-random": "error",
+    "security/detect-weak-ssl": "error",
+    "security/detect-weak-tls": "error",
+    "security/detect-wrong-crypto-usage": "error",
+    
+    // TypeScript-specific security rules
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/prefer-nullish-coalescing": "error",
+    "@typescript-eslint/prefer-optional-chain": "error",
+    "@typescript-eslint/no-unsafe-assignment": "warn",
+    "@typescript-eslint/no-unsafe-call": "warn",
+    "@typescript-eslint/no-unsafe-member-access": "warn",
+    "@typescript-eslint/no-unsafe-return": "warn",
+    
+    // General security best practices
+    "no-console": "warn",
+    "no-debugger": "error",
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    "no-script-url": "error",
+    "prefer-const": "error",
+    "no-var": "error",
+    "no-undef-init": "error",
+    "no-unused-vars": "warn",
+    "no-use-before-define": "error",
+    "no-duplicate-imports": "error",
+    "no-self-compare": "error",
+    "no-sequences": "error",
+    "no-throw-literal": "error",
+    "no-unmodified-loop-condition": "error",
+    "no-unused-expressions": "error",
+    "no-useless-call": "error",
+    "no-useless-concat": "error",
+    "no-useless-escape": "error",
+    "no-void": "error",
+    "no-with": "error",
+    "radix": "error",
+    "wrap-iife": ["error", "inside"],
+    "yoda": "error"
+  },
+  "overrides": [
+    {
+      "files": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
+      "rules": {
+        "security/detect-object-injection": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["scripts/**/*"],
+      "rules": {
+        "no-console": "off",
+        "security/detect-child-process": "off"
+      }
+    },
+    {
+      "files": ["src/test/**/*", "test/**/*"],
+      "rules": {
+        "security/detect-non-literal-require": "off",
+        "security/detect-object-injection": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "node_modules/",
+    "dist/",
+    "build/",
+    ".next/",
+    "coverage/",
+    "*.min.js",
+    "public/",
+    ".next/"
+  ],
+  "settings": {
+    "security": {
+      "ignore": [
+        {
+          "ruleName": "detect-non-literal-fs-filename",
+          "files": ["scripts/**/*", "test/**/*"]
+        },
+        {
+          "ruleName": "detect-child-process",
+          "files": ["scripts/**/*"]
+        }
+      ]
+    }
+  }
+}

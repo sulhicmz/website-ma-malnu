@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'galeri',
@@ -45,7 +45,7 @@ export default defineType({
       title: 'Gambar-gambar',
       type: 'array',
       of: [
-        {
+        defineArrayMember({
           type: 'object',
           fields: [
             defineField({
@@ -75,18 +75,18 @@ export default defineType({
               }
             },
           },
-        },
+        }),
       ],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'tags',
       title: 'Tag',
       type: 'array',
-      of: [{ type: 'string' }],
+      of: [defineArrayMember({ type: 'string' })],
       options: {
         layout: 'tags',
       },
-    }),
+    }, {strict: false}),
     defineField({
       name: 'published',
       title: 'Status Publikasi',

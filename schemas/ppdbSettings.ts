@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'ppdbSettings',
@@ -31,7 +31,7 @@ export default defineType({
         }),
       ],
       validation: (Rule) => Rule.required(),
-    }),
+    }, {strict: false}),
     defineField({
       name: 'quota',
       title: 'Kuota Pendaftaran',
@@ -58,13 +58,13 @@ export default defineType({
         }),
       ],
       validation: (Rule) => Rule.required(),
-    }),
+    }, {strict: false}),
     defineField({
       name: 'requirements',
       title: 'Persyaratan Pendaftaran',
       type: 'array',
       of: [
-        {
+        defineArrayMember({
           type: 'object',
           fields: [
             defineField({
@@ -97,15 +97,15 @@ export default defineType({
               }
             },
           },
-        },
+        }),
       ],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'fees',
       title: 'Biaya Pendidikan',
       type: 'array',
       of: [
-        {
+        defineArrayMember({
           type: 'object',
           fields: [
             defineField({
@@ -159,15 +159,15 @@ export default defineType({
               }
             },
           },
-        },
+        }),
       ],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'schedule',
       title: 'Jadwal PPDB',
       type: 'array',
       of: [
-        {
+        defineArrayMember({
           type: 'object',
           fields: [
             defineField({
@@ -201,9 +201,9 @@ export default defineType({
               }
             },
           },
-        },
+        }),
       ],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'contact',
       title: 'Kontak PPDB',
@@ -230,7 +230,7 @@ export default defineType({
           type: 'string',
         }),
       ],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'isActive',
       title: 'PPDB Aktif',

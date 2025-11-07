@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'guru',
@@ -69,10 +69,10 @@ export default defineType({
       title: 'Media Sosial',
       type: 'array',
       of: [
-        {
+        defineArrayMember({
           type: 'object',
           fields: [
-            {
+            defineField({
               name: 'platform',
               title: 'Platform',
               type: 'string',
@@ -85,16 +85,16 @@ export default defineType({
                   { title: 'YouTube', value: 'youtube' },
                 ],
               },
-            },
-            {
+            }),
+            defineField({
               name: 'url',
               title: 'URL',
               type: 'url',
-            },
+            }),
           ],
-        },
+        }),
       ],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'isActive',
       title: 'Status Aktif',

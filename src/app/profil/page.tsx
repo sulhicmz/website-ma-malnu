@@ -1,6 +1,7 @@
 // src/app/profil/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -22,7 +23,7 @@ export default async function ProfilPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <h1 className="text-3xl font-bold mb-8 text-center">Profil Sekolah</h1>
         
@@ -33,12 +34,12 @@ export default async function ProfilPage() {
               MA Malnu Kananga didirikan pada tahun 1980 dengan tujuan memberikan 
               pendidikan berkualitas berbasis nilai-nilai agama.
             </p>
-            <a 
+            <Link 
               href="/profil/sejarah" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -47,12 +48,12 @@ export default async function ProfilPage() {
               Menjadi lembaga pendidikan unggulan yang menghasilkan generasi berakhlak 
               mulia dan berprestasi.
             </p>
-            <a 
+            <Link 
               href="/profil/visi-misi" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -61,12 +62,12 @@ export default async function ProfilPage() {
               Fasilitas pembelajaran yang lengkap dan nyaman untuk mendukung proses 
               belajar mengajar yang optimal.
             </p>
-            <a 
+            <Link 
               href="/profil/fasilitas" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -75,12 +76,12 @@ export default async function ProfilPage() {
               Struktur organisasi yang jelas dan efektif untuk memastikan tata kelola 
               sekolah yang baik.
             </p>
-            <a 
+            <Link 
               href="/profil/struktur" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
         </div>
       </div>

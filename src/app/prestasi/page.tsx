@@ -1,6 +1,7 @@
 // src/app/prestasi/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -22,7 +23,7 @@ export default async function PrestasiPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <h1 className="text-3xl font-bold mb-8 text-center">Prestasi Sekolah</h1>
         
@@ -41,12 +42,12 @@ export default async function PrestasiPage() {
               <p className="text-gray-700 mb-4">
                 Prestasi dalam bidang akademik seperti olimpiade, lomba matematika, dan lainnya.
               </p>
-              <a 
+              <Link 
                 href="/prestasi/akademik" 
                 className="inline-block text-blue-600 hover:text-blue-800 font-medium"
               >
                 Lihat Prestasi →
-              </a>
+              </Link>
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -54,12 +55,12 @@ export default async function PrestasiPage() {
               <p className="text-gray-700 mb-4">
                 Prestasi dalam bidang non-akademik seperti olahraga, seni, dan kepramukaan.
               </p>
-              <a 
+              <Link 
                 href="/prestasi/non-akademik" 
                 className="inline-block text-blue-600 hover:text-blue-800 font-medium"
               >
-                Lihat Prestasi →
-              </a>
+                Lihat Prestasi Non-Akademik →
+              </Link>
             </div>
           </div>
           

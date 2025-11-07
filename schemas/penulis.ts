@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'penulis',
@@ -34,13 +34,13 @@ export default defineType({
       title: 'Biografi',
       type: 'array',
       of: [
-        {
+        defineArrayMember({
           type: 'block',
           styles: [{ title: 'Normal', value: 'normal' }],
           lists: [],
-        },
+        }),
       ],
-    }),
+    }, {strict: false}),
   ],
   preview: {
     select: {

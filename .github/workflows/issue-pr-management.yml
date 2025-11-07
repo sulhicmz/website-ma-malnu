@@ -1,0 +1,257 @@
+name: Issue & PR Management
+
+on:
+  issues:
+    types: [opened, reopened, closed]
+  pull_request:
+    types: [opened, reopened, closed, ready_for_review]
+  schedule:
+    # Run daily at 2 AM UTC (9 AM Jakarta time)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  triage-issues:
+    name: Triage Issues
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+    permissions:
+      issues: write
+      labels: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Auto-label issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const labels = [];
+            
+            // Categorize by title/content
+            if (issue.title.toLowerCase().includes('bug') || 
+                issue.body.toLowerCase().includes('error') ||
+                issue.body.toLowerCase().includes('broken')) {
+              labels.push('bug');
+            }
+            
+            if (issue.title.toLowerCase().includes('feature') || 
+                issue.title.toLowerCase().includes('enhancement') ||
+                issue.body.toLowerCase().includes('add')) {
+              labels.push('enhancement');
+            }
+            
+            if (issue.title.toLowerCase().includes('documentation') || 
+                issue.body.toLowerCase().includes('readme')) {
+              labels.push('documentation');
+            }
+            
+            if (issue.title.toLowerCase().includes('security') || 
+                issue.body.toLowerCase().includes('vulnerability')) {
+              labels.push('security');
+            }
+            
+            // Priority based on content
+            if (issue.body.toLowerCase().includes('urgent') || 
+                issue.body.toLowerCase().includes('critical')) {
+              labels.push('priority: critical');
+            } else if (issue.body.toLowerCase().includes('high')) {
+              labels.push('priority: high');
+            }
+            
+            // Add labels if any
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labels
+              });
+            }
+            
+            // Add to project board if configured
+            if (issue.state === 'open') {
+              // Add comment with next steps
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `## 🎯 Issue Triage Complete
+                
+                **Labels Applied**: ${labels.join(', ') || 'None'}
+                
+                ### Next Steps:
+                - 🏷️ Review and adjust labels if needed
+                - 📋 Add to project board (if applicable)
+                - 👥 Assign appropriate team members
+                - 🎯 Set milestone and priority
+                
+                ---
+                *This issue was automatically triaged. Please review and update as needed.*`
+              });
+            }
+
+  triage-prs:
+    name: Triage Pull Requests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+      labels: write
+      
+    steps:
+      - name: Auto-label PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const labels = [];
+            
+            // Categorize by title/content
+            if (pr.title.toLowerCase().startsWith('feat')) {
+              labels.push('feature');
+            } else if (pr.title.toLowerCase().startsWith('fix')) {
+              labels.push('bugfix');
+            } else if (pr.title.toLowerCase().startsWith('docs')) {
+              labels.push('documentation');
+            } else if (pr.title.toLowerCase().startsWith('refactor')) {
+              labels.push('refactoring');
+            } else if (pr.title.toLowerCase().startsWith('test')) {
+              labels.push('testing');
+            } else if (pr.title.toLowerCase().startsWith('chore')) {
+              labels.push('maintenance');
+            }
+            
+            // Size estimation based on files changed
+            if (pr.changed_files <= 3) {
+              labels.push('size: small');
+            } else if (pr.changed_files <= 10) {
+              labels.push('size: medium');
+            } else {
+              labels.push('size: large');
+            }
+            
+            // Add labels if any
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: labels
+              });
+            }
+
+  stale-management:
+    name: Stale Issues & PRs Management
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    permissions:
+      issues: write
+      pull-requests: write
+      
+    steps:
+      - name: Mark stale issues and PRs
+        uses: actions/stale@v8
+        with:
+          stale-issue-message: |
+            ⚠️ **This issue is stale** because it has been open for 30 days with no activity.
+            
+            Please:
+            - 🔄 Add a comment with updates
+            - ✅ Mark as complete if resolved
+            - 🎯 Update priority or assignee
+            
+            This issue will be closed in 7 days if no activity occurs.
+          stale-pr-message: |
+            ⚠️ **This pull request is stale** because it has been open for 30 days with no activity.
+            
+            Please:
+            - 🔄 Add a comment with updates
+            - 📝 Address review comments
+            - 🧪 Update tests if needed
+            
+            This PR will be closed in 7 days if no activity occurs.
+          days-before-stale: 30
+          days-before-close: 7
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          exempt-issue-labels: 'priority: critical,priority: high,security,help wanted'
+          exempt-pr-labels: 'priority: critical,priority: high,security,work in progress'
+
+  weekly-summary:
+    name: Weekly Activity Summary
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    permissions:
+      issues: read
+      pull-requests: read
+      
+    steps:
+      - name: Generate weekly summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const isoDate = oneWeekAgo.toISOString();
+            
+            // Get recent issues
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              since: isoDate,
+              state: 'all'
+            });
+            
+            // Get recent PRs
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all'
+            });
+            
+            // Filter PRs from last week
+            const recentPRs = prs.data.filter(pr => new Date(pr.created_at) > oneWeekAgo);
+            
+            // Create summary
+            const openIssues = issues.data.filter(i => i.state === 'open' && !i.pull_request);
+            const closedIssues = issues.data.filter(i => i.state === 'closed' && !i.pull_request);
+            const openPRs = recentPRs.filter(pr => pr.state === 'open');
+            const mergedPRs = recentPRs.filter(pr => pr.state === 'closed' && pr.merged);
+            
+            const summary = `## 📊 Weekly Repository Summary
+            
+            **Period**: ${oneWeekAgo.toLocaleDateString()} - ${new Date().toLocaleDateString()}
+            
+            ### 🎯 Issues
+            - 🆕 New Issues: ${openIssues.length}
+            - ✅ Closed Issues: ${closedIssues.length}
+            - 📋 Open Issues: ${openIssues.length}
+            
+            ### 🔧 Pull Requests
+            - 🆕 New PRs: ${openPRs.length}
+            - ✅ Merged PRs: ${mergedPRs.length}
+            - 📋 Open PRs: ${openPRs.length}
+            
+            ### 📈 Activity Metrics
+            - 🔄 Total Activity: ${issues.data.length + recentPRs.length}
+            - 📊 Closure Rate: ${closedIssues.length > 0 ? Math.round((closedIssues.length / (closedIssues.length + openIssues.length)) * 100) : 0}%
+            - 🎯 Merge Rate: ${recentPRs.length > 0 ? Math.round((mergedPRs.length / recentPRs.length) * 100) : 0}%
+            
+            ---
+            *Generated automatically on ${new Date().toLocaleDateString()}*`;
+            
+            // Create issue with summary (or update existing)
+            try {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `📊 Weekly Summary - ${new Date().toLocaleDateString()}`,
+                body: summary,
+                labels: ['automation', 'weekly-summary']
+              });
+            } catch (error) {
+              console.log('Summary issue already exists or failed to create');
+            }

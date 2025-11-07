@@ -1,6 +1,7 @@
 // src/app/[slug]/page.tsx
+import Link from 'next/link'
 import { getPage, getAllPageSlugs, getSiteSettings } from '@/lib/fetchData'
-import { Breadcrumb } from '@/components/Breadcrumb'
+import { Breadcrumb } from '@/components'
 
 export const revalidate = 300 // Revalidate every 5 minutes
 
@@ -39,12 +40,12 @@ export default async function DynamicPage({ params }: { params: { slug: string }
             <p className="text-gray-600 mb-6">
               Maaf, halaman yang Anda cari tidak dapat ditemukan.
             </p>
-            <a 
+            <Link 
               href="/" 
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
               Kembali ke Beranda
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -72,7 +73,7 @@ export default async function DynamicPage({ params }: { params: { slug: string }
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <article className="max-w-4xl mx-auto">
           <header className="mb-8 text-center">
