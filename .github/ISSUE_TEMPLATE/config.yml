@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Diskusi Umum
+    url: https://github.com/sulhicmz/website-ma-malnu/discussions
+    about: Untuk pertanyaan umum dan diskusi tentang proyek
+  - name: 🔒 Laporan Keamanan
+    url: https://github.com/sulhicmz/website-ma-malnu/security/advisories/new
+    about: Laporkan masalah keamanan secara privat

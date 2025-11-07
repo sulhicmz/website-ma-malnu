@@ -1,0 +1,36 @@
+# Code Owners for Website MA Malnu Kananga
+# These owners will be automatically requested for review when someone opens a pull request.
+
+# Default owner for everything in the repo
+* @sulhicmz
+
+# Components
+/components/ @sulhicmz
+
+# App Router pages
+/app/ @sulhicmz
+
+# Sanity schemas
+/schemas/ @sulhicmz
+
+# Configuration files
+*.config.js @sulhicmz
+*.config.ts @sulhicmz
+.eslintrc* @sulhicmz
+.prettierrc* @sulhicmz
+tsconfig.json @sulhicmz
+
+# GitHub specific files
+/.github/ @sulhicmz
+
+# Documentation
+*.md @sulhicmz
+
+# Security and community files
+/SECURITY.md @sulhicmz
+/CODE_OF_CONDUCT.md @sulhicmz
+/CONTRIBUTING.md @sulhicmz
+
+# Dependencies
+/package.json @sulhicmz
+/package-lock.json @sulhicmz

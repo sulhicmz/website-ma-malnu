@@ -72,6 +72,50 @@ Untuk deploy ke Vercel:
 4. Tambahkan environment variables di pengaturan Vercel
 5. Deploy!
 
-## Lisensi
+## 🤝 Kontribusi
 
-MIT License
+Kami menyambut kontribusi dari siapa saja! Sebelum berkontribusi, silakan baca:
+
+- [Contributing Guidelines](CONTRIBUTING.md) - Panduan lengkap untuk berkontribusi
+- [Code of Conduct](CODE_OF_CONDUCT.md) - Kode etik komunitas kami
+- [Security Policy](SECURITY.md) - Cara melaporkan masalah keamanan
+
+### Quick Start untuk Kontributor
+
+1. Fork repository ini
+2. Buat branch baru (`git checkout -b feature/amazing-feature`)
+3. Commit perubahan Anda (`git commit -m 'feat: add amazing feature'`)
+4. Push ke branch (`git push origin feature/amazing-feature`)
+5. Buka Pull Request
+
+## 📋 Issue Templates
+
+Kami menyediakan template untuk memudahkan Anda:
+
+- [🐛 Bug Report](.github/ISSUE_TEMPLATE/bug_report.yml) - Laporkan bug
+- [✨ Feature Request](.github/ISSUE_TEMPLATE/feature_request.yml) - Usulkan fitur baru
+- [📚 Documentation](.github/ISSUE_TEMPLATE/documentation.yml) - Perbaikan dokumentasi
+
+## 💬 Dukungan
+
+Butuh bantuan? Lihat [SUPPORT.md](SUPPORT.md) untuk berbagai cara mendapatkan dukungan:
+
+- 📚 [Dokumentasi](SUPPORT.md#dokumentasi)
+- 💬 [GitHub Discussions](https://github.com/sulhicmz/website-ma-malnu/discussions)
+- 🐛 [Issue Tracker](https://github.com/sulhicmz/website-ma-malnu/issues)
+
+## 📝 Changelog
+
+Lihat [CHANGELOG.md](CHANGELOG.md) untuk daftar perubahan di setiap versi.
+
+## 📄 Lisensi
+
+MIT License - lihat file [LICENSE](LICENSE) untuk detail.
+
+## 🙏 Acknowledgments
+
+Terima kasih kepada semua kontributor yang telah membantu proyek ini!
+
+---
+
+**Dibuat dengan ❤️ untuk MA Malnu Kananga**
