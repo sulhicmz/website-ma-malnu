@@ -190,3 +190,5 @@ private/
 # Local development
 .local/
 local/
+.gemini/
+gha-creds-*.json

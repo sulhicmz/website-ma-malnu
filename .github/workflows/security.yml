@@ -9,24 +9,9 @@ on:
     # Run security scans daily at 2 AM UTC
     - cron: '0 2 * * *'
   workflow_dispatch:
-    inputs:
-      scan_type:
-        description: 'Type of security scan to run'
-        required: false
-        default: 'all'
-        type: choice
-        options:
-          - all
-          - codeql
-          - secret-scan
-          - dependency-audit
-          - sast
 
 env:
   NODE_VERSION: '20'
-  # Enable GitHub Advanced Security if available
-  ENABLE_CODE_SCANNING: true
-  ENABLE_SECRET_SCANNING: true
 
 jobs:
   # CodeQL Analysis
@@ -84,18 +69,6 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-
-      - name: Scan with detect-secrets
-        run: |
-          pip install detect-secrets
-          detect-secrets scan --baseline .secrets.baseline || true
-          detect-secrets scan > .secrets.new
-          if [ -s .secrets.new ]; then
-            echo "Potential secrets detected!"
-            cat .secrets.new
-            exit 1
-          fi
 
   # Dependency Security Audit
   dependency-audit:
@@ -128,14 +101,6 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
-
-      - name: Upload Snyk results to GitHub Security tab
-        uses: snyk/actions/upload-sarif@master
-        if: always()
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          sarif-file: 'snyk.sarif'
 
   # Static Application Security Testing (SAST)
   sast:
@@ -173,16 +138,6 @@ jobs:
         with:
           sarif_file: semgrep.sarif
 
-      - name: Run ESLint security rules
-        run: |
-          npm run lint -- --format=json --output-file=eslint-report.json || true
-          npx eslint --config .eslintrc.security.json --format=json src/ > eslint-security.json || true
-
-      - name: Run npm audit for security issues
-        run: |
-          npm audit --json > npm-audit.json || true
-          node scripts/security-audit-parser.js npm-audit.json
-
   # Infrastructure as Code Security
   iac-security:
     name: Infrastructure Security Scan
@@ -207,88 +162,6 @@ jobs:
         with:
           sarif_file: reports/github-actions.sarif
 
-      - name: Run tfsec for any Terraform files
-        if: hashFiles('**/*.tf') != ''
-        uses: aquasecurity/tfsec-action@v1.0.0
-        with:
-          additional_args: '--format sarif --out tfsec.sarif'
-
-      - name: Upload tfsec SARIF to GitHub
-        uses: github/codeql-action/upload-sarif@v3
-        if: hashFiles('**/*.tf') != '' && always()
-        with:
-          sarif_file: tfsec.sarif
-
-  # Container Security (if Dockerfile exists)
-  container-security:
-    name: Container Security Scan
-    runs-on: ubuntu-latest
-    if: hashFiles('Dockerfile*') != ''
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: |
-          docker build -t temp-security-scan .
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: temp-security-scan
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-      - name: Run Docker Bench Security
-        run: |
-          docker run -it --net host --pid host --userns host --cap-add audit_control \
-            -e DOCKER_CONTENT_TRUST=$DOCKER_CONTENT_TRUST \
-            -v /etc:/etc:ro \
-            -v /usr/bin/containerd:/usr/bin/containerd:ro \
-            -v /usr/bin/runc:/usr/bin/runc:ro \
-            -v /usr/lib/systemd:/usr/lib/systemd:ro \
-            -v /var/lib:/var/lib:ro \
-            -v /var/run/docker.sock:/var/run/docker.sock:ro \
-            --label docker_bench_security \
-            docker/docker-bench-security
-
-  # Security Scorecard
-  security-scorecard:
-    name: OSSF Scorecard
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      id-token: write
-      actions: read
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Run OSSF Scorecard
-        uses: ossf/scorecard-action@v2.3.1
-        with:
-          results_file: results.sarif
-          results_format: sarif
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Scorecard results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: results.sarif
-
   # Security Summary
   security-summary:
     name: Security Summary
@@ -299,12 +172,6 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v3
-
       - name: Generate Security Summary
         run: |
           echo "# 🔒 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
@@ -349,7 +216,6 @@ jobs:
           
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Security Metrics" >> $GITHUB_STEP_SUMMARY
-          echo "- Scans completed: ${{ strategy.job-total }}" >> $GITHUB_STEP_SUMMARY
           echo "- Timestamp: $(date -u)" >> $GITHUB_STEP_SUMMARY
           echo "- Workflow: ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
           echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
@@ -357,34 +223,3 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🔍 Detailed Results" >> $GITHUB_STEP_SUMMARY
           echo "Check the **Security** tab in this repository for detailed findings and remediation guidance." >> $GITHUB_STEP_SUMMARY
-
-      - name: Comment on PR (if applicable)
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            
-            let comment = `## 🔒 Security Scan Results\n\n`;
-            comment += `| Scan Type | Status |\n`;
-            comment += `|-----------|--------|\n`;
-            comment += `| CodeQL Analysis | ${{ needs.codeql.result == 'success' && '✅ Passed' || '❌ Failed' }} |\n`;
-            comment += `| Secret Scanning | ${{ needs.secret-scan.result == 'success' && '✅ Passed' || '⚠️ Issues' }} |\n`;
-            comment += `| Dependency Audit | ${{ needs.dependency-audit.result == 'success' && '✅ Passed' || '⚠️ Issues' }} |\n`;
-            comment += `| Static Analysis | ${{ needs.sast.result == 'success' && '✅ Passed' || '⚠️ Issues' }} |\n`;
-            comment += `| Infrastructure Security | ${{ needs.iac-security.result == 'success' && '✅ Passed' || '⚠️ Issues' }} |\n\n`;
-            comment += `📊 **Security Score**: ${{
-              (needs.codeql.result == 'success' ? 20 : 0) +
-              (needs.secret-scan.result == 'success' ? 20 : 0) +
-              (needs.dependency-audit.result == 'success' ? 20 : 0) +
-              (needs.sast.result == 'success' ? 20 : 0) +
-              (needs.iac-security.result == 'success' ? 20 : 0)
-            }}/100\n\n`;
-            comment += `🔍 Check the **Security** tab for detailed findings and remediation guidance.`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });

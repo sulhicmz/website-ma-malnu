@@ -1,0 +1,294 @@
+name: Repository Health Monitor
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC (1 PM Jakarta time)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      check_type:
+        description: 'Type of health check to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - dependencies
+          - security
+          - performance
+          - documentation
+          - code-quality
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  health-check:
+    name: Repository Health Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Dependency Health Check
+        id: deps-health
+        run: |
+          echo "## 📦 Dependency Health Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for outdated packages
+          npm outdated --json > outdated.json || true
+          outdated_count=$(cat outdated.json | jq 'keys | length' || echo 0)
+          
+          # Check for security vulnerabilities
+          npm audit --json > audit.json || true
+          vulnerabilities=$(cat audit.json | jq '.vulnerabilities | keys | length' || echo 0)
+          critical_vulns=$(cat audit.json | jq '.vulnerabilities | map(select(.severity == "critical")) | length' || echo 0)
+          high_vulns=$(cat audit.json | jq '.vulnerabilities | map(select(.severity == "high")) | length' || echo 0)
+          
+          echo "### 📊 Dependency Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- Outdated packages: $outdated_count" >> $GITHUB_STEP_SUMMARY
+          echo "- Total vulnerabilities: $vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          echo "- Critical vulnerabilities: $critical_vulns" >> $GITHUB_STEP_SUMMARY
+          echo "- High vulnerabilities: $high_vulns" >> $GITHUB_STEP_SUMMARY
+          
+          # Calculate health score
+          health_score=100
+          health_score=$((health_score - (outdated_count * 2)))
+          health_score=$((health_score - (critical_vulns * 20)))
+          health_score=$((health_score - (high_vulns * 10)))
+          
+          if [ $health_score -lt 0 ]; then health_score=0; fi
+          echo "### 🎯 Dependency Health Score: $health_score/100" >> $GITHUB_STEP_SUMMARY
+          
+          echo "health_score=$health_score" >> $GITHUB_OUTPUT
+          echo "outdated_count=$outdated_count" >> $GITHUB_OUTPUT
+          echo "vulnerabilities=$vulnerabilities" >> $GITHUB_OUTPUT
+
+      - name: Code Quality Check
+        id: quality-check
+        run: |
+          echo "## 📋 Code Quality Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Run linting
+          npm run lint -- --format=json > lint-report.json || true
+          lint_errors=$(cat lint-report.json | jq '.length' || echo 0)
+          
+          # Type checking
+          npm run type-check || type_check_failed=1
+          
+          # Test coverage
+          npm run test:coverage || test_failed=1
+          if [ -f "coverage/coverage-summary.json" ]; then
+            coverage=$(cat coverage/coverage-summary.json | jq '.total.lines.pct' || echo 0)
+          else
+            coverage=0
+          fi
+          
+          echo "### 📊 Quality Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- ESLint errors: $lint_errors" >> $GITHUB_STEP_SUMMARY
+          echo "- Type check: $([ -z "$type_check_failed" ] && echo "✅ Passed" || echo "❌ Failed")" >> $GITHUB_STEP_SUMMARY
+          echo "- Test coverage: ${coverage}%" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests: $([ -z "$test_failed" ] && echo "✅ Passed" || echo "❌ Failed")" >> $GITHUB_STEP_SUMMARY
+          
+          # Calculate quality score
+          quality_score=100
+          quality_score=$((quality_score - (lint_errors * 5)))
+          if [ -n "$type_check_failed" ]; then quality_score=$((quality_score - 20)); fi
+          if [ -n "$test_failed" ]; then quality_score=$((quality_score - 20)); fi
+          if (( $(echo "$coverage < 80" | bc -l) )); then quality_score=$((quality_score - 10)); fi
+          
+          if [ $quality_score -lt 0 ]; then quality_score=0; fi
+          echo "### 🎯 Code Quality Score: $quality_score/100" >> $GITHUB_STEP_SUMMARY
+          
+          echo "quality_score=$quality_score" >> $GITHUB_OUTPUT
+          echo "coverage=$coverage" >> $GITHUB_OUTPUT
+
+      - name: Performance Check
+        id: perf-check
+        run: |
+          echo "## ⚡ Performance Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Build application
+          npm run build
+          
+          # Analyze bundle size
+          if [ -f ".next/build-manifest.json" ]; then
+            bundle_size=$(du -sh .next | cut -f1)
+            echo "### 📊 Performance Metrics" >> $GITHUB_STEP_SUMMARY
+            echo "- Bundle size: $bundle_size" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check bundle size limits
+          if [ -f "config/.bundlesize" ]; then
+            npm run deps:bundle || bundle_check_failed=1
+            echo "- Bundle size check: $([ -z "$bundle_check_failed" ] && echo "✅ Passed" || echo "❌ Failed")" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Performance score (simplified)
+          perf_score=90
+          if [ -n "$bundle_check_failed" ]; then perf_score=$((perf_score - 20)); fi
+          
+          echo "### 🎯 Performance Score: $perf_score/100" >> $GITHUB_STEP_SUMMARY
+          
+          echo "perf_score=$perf_score" >> $GITHUB_OUTPUT
+
+      - name: Documentation Check
+        id: docs-check
+        run: |
+          echo "## 📚 Documentation Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check README exists and is up to date
+          if [ -f "README.md" ]; then
+            readme_size=$(wc -l < README.md)
+            echo "### 📊 Documentation Metrics" >> $GITHUB_STEP_SUMMARY
+            echo "- README lines: $readme_size" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for documentation files
+          doc_files=$(find docs/ -name "*.md" | wc -l)
+          echo "- Documentation files: $doc_files" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for API documentation
+          if [ -d "src/api" ]; then
+            api_files=$(find src/api/ -name "*.ts" | wc -l)
+            echo "- API files: $api_files" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Documentation score
+          docs_score=85
+          if [ $readme_size -lt 50 ]; then docs_score=$((docs_score - 15)); fi
+          if [ $doc_files -lt 5 ]; then docs_score=$((docs_score - 10)); fi
+          
+          echo "### 🎯 Documentation Score: $docs_score/100" >> $GITHUB_STEP_SUMMARY
+          
+          echo "docs_score=$docs_score" >> $GITHUB_OUTPUT
+
+      - name: Generate Health Report
+        run: |
+          # Calculate overall health score
+          overall_score=$(( ( ${{ steps.deps-health.outputs.health_score }} + 
+                           ${{ steps.quality-check.outputs.quality_score }} + 
+                           ${{ steps.perf-check.outputs.perf_score }} + 
+                           ${{ steps.docs-check.outputs.docs_score }} ) / 4 ))
+          
+          echo "## 🏥 Repository Health Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Overall Health Score: $overall_score/100" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Health status
+          if [ $overall_score -ge 90 ]; then
+            status="🟢 Excellent"
+          elif [ $overall_score -ge 80 ]; then
+            status="🟡 Good"
+          elif [ $overall_score -ge 70 ]; then
+            status="🟠 Fair"
+          else
+            status="🔴 Poor"
+          fi
+          
+          echo "**Status**: $status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 📈 Score Breakdown" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependencies: ${{ steps.deps-health.outputs.health_score }}/100" >> $GITHUB_STEP_SUMMARY
+          echo "- Code Quality: ${{ steps.quality-check.outputs.quality_score }}/100" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance: ${{ steps.perf-check.outputs.perf_score }}/100" >> $GITHUB_STEP_SUMMARY
+          echo "- Documentation: ${{ steps.docs-check.outputs.docs_score }}/100" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Recommendations
+          echo "### 💡 Recommendations" >> $GITHUB_STEP_SUMMARY
+          
+          if [ ${{ steps.deps-health.outputs.outdated_count }} -gt 5 ]; then
+            echo "- 🔄 Consider updating ${{ steps.deps-health.outputs.outdated_count }} outdated packages" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ ${{ steps.deps-health.outputs.vulnerabilities }} -gt 0 ]; then
+            echo "- 🔒 Address ${{ steps.deps-health.outputs.vulnerabilities }} security vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if (( $(echo "${{ steps.quality-check.outputs.coverage }} < 80" | bc -l) )); then
+            echo "- 🧪 Improve test coverage from ${{ steps.quality-check.outputs.coverage }}% to 80%+" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ $overall_score -lt 80 ]; then
+            echo "- 📋 Overall repository health needs attention" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Report generated on $(date)*" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create Health Issue if Needed
+        if: ${{ steps.deps-health.outputs.health_score < 80 || steps.quality-check.outputs.quality_score < 80 }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const overallScore = Math.round(
+              (parseInt('${{ steps.deps-health.outputs.health_score }}') + 
+               parseInt('${{ steps.quality-check.outputs.quality_score }}') + 
+               parseInt('${{ steps.perf-check.outputs.perf_score }}') + 
+               parseInt('${{ steps.docs-check.outputs.docs_score }}')) / 4
+            );
+            
+            if (overallScore < 80) {
+              const title = `🏥 Repository Health Alert - Score: ${overallScore}/100`;
+              const body = `## 🏥 Repository Health Alert
+              
+              **Overall Health Score**: ${overallScore}/100
+              **Date**: ${new Date().toLocaleDateString()}
+              
+              ### 📊 Current Status
+              - **Dependencies**: ${{ steps.deps-health.outputs.health_score }}/100
+              - **Code Quality**: ${{ steps.quality-check.outputs.quality_score }}/100  
+              - **Performance**: ${{ steps.perf-check.outputs.perf_score }}/100
+              - **Documentation**: ${{ steps.docs-check.outputs.docs_score }}/100
+              
+              ### 🚨 Action Required
+              The repository health score is below 80%. Please review the following areas:
+              
+              ${overallScore < 70 ? '- **Critical**: Immediate attention required' : '- **Warning**: Improvement needed'}
+              
+              ### 📋 Next Steps
+              1. Review the detailed health report in the Actions tab
+              2. Address critical issues first
+              3. Update dependencies and fix vulnerabilities
+              4. Improve test coverage and code quality
+              5. Update documentation as needed
+              
+              ---
+              *This issue was automatically created by the health monitor workflow.*`;
+              
+              try {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: title,
+                  body: body,
+                  labels: ['health-monitor', 'automation', 'maintenance']
+                });
+              } catch (error) {
+                console.log('Health issue already exists or failed to create');
+              }
+            }
