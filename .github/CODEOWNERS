@@ -1,136 +1,36 @@
-# CODEOWNERS File
-# 
-# This file defines individuals or teams that are responsible for code in this repository.
-# CODEOWNERS are automatically requested for review when someone opens a pull request.
+# Code Owners for Website MA Malnu Kananga
+# These owners will be automatically requested for review when someone opens a pull request.
 
-# Global CODEOWNERS - Repository owner has ultimate responsibility
-*       @sulhicmz
+# Default owner for everything in the repo
+* @sulhicmz
 
-# Core Configuration Files - Repository owner approval required
-*.json  @sulhicmz
-*.yml   @sulhicmz
-*.yaml  @sulhicmz
-*.toml  @sulhicmz
-*.lock  @sulhicmz
+# Components
+/components/ @sulhicmz
 
-# Package Management
-package*.json @sulhicmz
-yarn.lock      @sulhicmz
-pnpm-lock.yaml @sulhicmz
+# App Router pages
+/app/ @sulhicmz
 
-# Security Critical Files - Highest level of protection
-.env*       @sulhicmz
-*.key       @sulhicmz
-*.pem       @sulhicmz
-*.p12       @sulhicmz
-*.pfx       @sulhicmz
-secrets/    @sulhicmz
-credentials/ @sulhicmz
+# Sanity schemas
+/schemas/ @sulhicmz
 
-# GitHub Configuration - Repository settings and workflows
-.github/    @sulhicmz
-.gitignore  @sulhicmz
-.gitattributes @sulhicmz
+# Configuration files
+*.config.js @sulhicmz
+*.config.ts @sulhicmz
+.eslintrc* @sulhicmz
+.prettierrc* @sulhicmz
+tsconfig.json @sulhicmz
 
-# Infrastructure and Deployment
-Dockerfile*     @sulhicmz
-docker-compose* @sulhicmz
-k8s/            @sulhicmz
-terraform/      @sulhicmz
-
-# Source Code - Core application logic
-src/            @sulhicmz
-
-# Components - UI components
-src/components/ @sulhicmz
-
-# Pages - Application pages
-src/app/        @sulhicmz
-
-# Libraries and Utilities
-src/lib/        @sulhicmz
-
-# API Routes
-src/api/        @sulhicmz
-
-# Schemas and Types
-schemas/        @sulhicmz
-src/types/      @sulhicmz
-
-# Configuration Files
-config/         @sulhicmz
-tailwind.config.* @sulhicmz
-next.config.*     @sulhicmz
-tsconfig.*        @sulhicmz
-vitest.config.*   @sulhicmz
-playwright.config.* @sulhicmz
+# GitHub specific files
+/.github/ @sulhicmz
 
 # Documentation
-docs/           @sulhicmz
-*.md           @sulhicmz
+*.md @sulhicmz
 
-# Scripts and Automation
-scripts/        @sulhicmz
+# Security and community files
+/SECURITY.md @sulhicmz
+/CODE_OF_CONDUCT.md @sulhicmz
+/CONTRIBUTING.md @sulhicmz
 
-# Testing
-test/           @sulhicmz
-src/test/       @sulhicmz
-*.test.*        @sulhicmz
-*.spec.*        @sulhicmz
-
-# Static Assets
-public/         @sulhicmz
-
-# Build Outputs (usually ignored, but if committed)
-build/          @sulhicmz
-dist/           @sulhicmz
-.out/           @sulhicmz
-
-# Storybook Stories
-*.stories.*     @sulhicmz
-.stories/       @sulhicmz
-
-# ESLint and Prettier Configuration
-.eslintrc*      @sulhicmz
-.prettierrc*    @sulhicmz
-
-# CI/CD and Pipeline Files
-.github/workflows/ @sulhicmz
-.gitlab-ci.yml    @sulhicmz
-azure-pipelines.yml @sulhicmz
-
-# Security and Compliance
-SECURITY.md     @sulhicmz
-LICENSE         @sulhicmz
-COPYRIGHT       @sulhicmz
-
-# README and Project Documentation
-README*         @sulhicmz
-CHANGELOG*      @sulhicmz
-CONTRIBUTING*   @sulhicmz
-CODE_OF_CONDUCT* @sulhicmz
-
-# Issue and Pull Request Templates
-.github/ISSUE_TEMPLATE/ @sulhicmz
-.github/PULL_REQUEST_TEMPLATE.md @sulhicmz
-
-# Dependabot Configuration
-dependabot.yml  @sulhicmz
-.github/dependabot.yml @sulhicmz
-
-# Funding and Sponsorship
-.github/FUNDING.yml @sulhicmz
-SPONSORS*       @sulhicmz
-
-# Release and Version Management
-.github/RELEASE_NOTES/ @sulhicmz
-.github/ISSUE_TEMPLATE/ @sulhicmz
-
-# Local Development
-.vscode/        @sulhicmz
-.idea/          @sulhicmz
-*.local         @sulhicmz
-
-# Emergency Override
-# In case of emergency, the repository owner can override any CODEOWNERS rules
-# by using the admin bypass functionality in GitHub.
+# Dependencies
+/package.json @sulhicmz
+/package-lock.json @sulhicmz

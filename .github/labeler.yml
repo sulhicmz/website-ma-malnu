@@ -1,0 +1,46 @@
+# Automatically label PRs based on changed files
+
+documentation:
+  - '**/*.md'
+  - 'docs/**/*'
+
+dependencies:
+  - 'package.json'
+  - 'package-lock.json'
+  - 'yarn.lock'
+  - 'pnpm-lock.yaml'
+
+configuration:
+  - '.github/**/*'
+  - '*.config.js'
+  - '*.config.ts'
+  - '.eslintrc*'
+  - '.prettierrc*'
+  - 'tsconfig.json'
+
+components:
+  - 'components/**/*'
+  - 'src/components/**/*'
+
+pages:
+  - 'app/**/*'
+  - 'src/app/**/*'
+
+styles:
+  - '**/*.css'
+  - 'tailwind.config.*'
+  - 'postcss.config.*'
+
+schemas:
+  - 'schemas/**/*'
+  - 'src/schemas/**/*'
+
+tests:
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/*.spec.ts'
+  - '**/*.spec.tsx'
+  - '__tests__/**/*'
+
+ci-cd:
+  - '.github/workflows/**/*'

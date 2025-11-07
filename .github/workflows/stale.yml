@@ -1,0 +1,46 @@
+name: Mark stale issues and pull requests
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: |
+            👋 Issue ini telah ditandai sebagai stale karena tidak ada aktivitas selama 60 hari.
+
+            Jika issue ini masih relevan, silakan tambahkan komentar untuk menghapus label stale.
+            Jika tidak ada aktivitas dalam 7 hari ke depan, issue ini akan ditutup secara otomatis.
+
+            Terima kasih atas kontribusi Anda! 🙏
+          stale-pr-message: |
+            👋 Pull Request ini telah ditandai sebagai stale karena tidak ada aktivitas selama 30 hari.
+
+            Jika PR ini masih relevan, silakan rebase dengan branch main dan tambahkan komentar.
+            Jika tidak ada aktivitas dalam 7 hari ke depan, PR ini akan ditutup secara otomatis.
+
+            Terima kasih atas kontribusi Anda! 🙏
+          close-issue-message: |
+            🔒 Issue ini telah ditutup karena tidak ada aktivitas.
+
+            Jika Anda masih mengalami masalah ini, silakan buka issue baru dengan informasi terbaru.
+          close-pr-message: |
+            🔒 Pull Request ini telah ditutup karena tidak ada aktivitas.
+
+            Jika Anda masih ingin melanjutkan PR ini, silakan buka PR baru.
+          days-before-stale: 60
+          days-before-close: 7
+          days-before-pr-stale: 30
+          days-before-pr-close: 7
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          exempt-issue-labels: 'pinned,security,roadmap'
+          exempt-pr-labels: 'pinned,security'

@@ -1,139 +1,181 @@
-# Security Policy
+# 🔒 Kebijakan Keamanan
 
-## Supported Versions
+## Versi yang Didukung
 
-| Version | Supported          | Security Updates |
-|---------|--------------------|------------------|
-| 1.0.x   | :white_check_mark: | Yes              |
-| < 1.0   | :x:                | No               |
+Kami saat ini mendukung versi berikut dengan pembaruan keamanan:
 
-## Reporting a Vulnerability
+| Versi | Didukung          |
+| ------- | ------------------ |
+| main    | :white_check_mark: |
+| < 1.0   | :x:                |
 
-### 🚨 **How to Report**
+## 🐛 Melaporkan Kerentanan
 
-If you discover a security vulnerability in the MA Malnu Kananga website, please report it to us privately before disclosing it publicly.
+Keamanan website MA Malnu Kananga adalah prioritas utama kami. Jika Anda menemukan kerentanan keamanan, kami sangat menghargai bantuan Anda dalam mengungkapkannya kepada kami secara bertanggung jawab.
 
-#### **Primary Contact**
-- **Email**: security@malnu.sch.id
-- **Response Time**: Within 48 hours
+### Cara Melaporkan
 
-#### **Alternative Contact**
-- **GitHub Security Advisory**: Use GitHub's private vulnerability reporting
-- **Urgent Issues**: Contact the development team directly
+**JANGAN** membuat issue publik untuk kerentanan keamanan.
 
-### 📋 **What to Include**
+Sebagai gantinya, silakan laporkan kerentanan keamanan melalui salah satu cara berikut:
 
-Please include the following information in your report:
+1. **GitHub Security Advisories** (Direkomendasikan)
+   - Buka [Security Advisories](https://github.com/sulhicmz/website-ma-malnu/security/advisories/new)
+   - Klik "Report a vulnerability"
+   - Isi formulir dengan detail lengkap
 
-1. **Vulnerability Type**
-   - XSS, SQL Injection, CSRF, etc.
-   - Authentication/Authorization issues
-   - Data exposure
-   - Other security concerns
+2. **Email Langsung**
+   - Kirim email ke: [INSERT SECURITY EMAIL]
+   - Gunakan subjek: `[SECURITY] Deskripsi singkat kerentanan`
 
-2. **Detailed Description**
-   - Steps to reproduce the issue
-   - Expected vs actual behavior
-   - Potential impact
+### Informasi yang Harus Disertakan
 
-3. **Technical Details**
-   - Affected versions
-   - Screenshots or code examples
-   - Network requests (if applicable)
+Untuk membantu kami memahami dan mengatasi masalah dengan cepat, mohon sertakan:
 
-4. **Environment Information**
-   - Browser/OS version
-   - Device type
-   - Network conditions
+- **Deskripsi kerentanan**: Jelaskan masalah keamanan dengan detail
+- **Langkah reproduksi**: Langkah-langkah untuk mereproduksi kerentanan
+- **Dampak potensial**: Apa yang bisa dilakukan penyerang dengan kerentanan ini
+- **Versi yang terpengaruh**: Versi atau commit yang terpengaruh
+- **Proof of Concept**: Kode atau screenshot jika memungkinkan
+- **Saran perbaikan**: Jika Anda memiliki ide untuk memperbaikinya
 
-### ⏰ **Response Timeline**
+### Contoh Laporan
 
-| Timeframe | Action |
-|-----------|--------|
-| 48 hours  | Initial response and acknowledgment |
-| 7 days    | Detailed analysis and assessment |
-| 14 days   | Patch development and testing |
-| 30 days   | Public disclosure (if applicable) |
+```
+Subject: [SECURITY] SQL Injection di Form PPDB
 
-### 🔒 **Our Security Commitment**
+Deskripsi:
+Ditemukan kerentanan SQL Injection pada form pendaftaran PPDB yang
+memungkinkan penyerang untuk mengakses atau memodifikasi database.
 
-We take security seriously and are committed to:
+Langkah Reproduksi:
+1. Buka halaman /ppdb/daftar
+2. Masukkan payload berikut di field nama: ' OR '1'='1
+3. Submit form
+4. Database query tereksekusi tanpa sanitasi
 
-- **Private Disclosure**: We'll keep your report confidential
-- **Timely Response**: We'll respond within 48 hours
-- **Transparent Communication**: Regular updates on our progress
-- **Coordination**: We'll work with you to verify and fix the issue
-- **Recognition**: We'll credit you in our security advisories (with your permission)
+Dampak:
+- Akses tidak sah ke database
+- Potensi data breach informasi siswa
+- Modifikasi atau penghapusan data
 
-### 🛡️ **Security Measures Already in Place**
+Versi: main branch (commit abc123)
 
-Our website implements several security measures:
+Saran:
+Gunakan prepared statements atau ORM untuk semua query database.
+```
 
-- **Dependency Management**: Automated security scanning with Dependabot
-- **Code Quality**: ESLint, TypeScript strict mode, and regular audits
-- **Rate Limiting**: API protection with @upstash/ratelimit
-- **Input Validation**: Zod schema validation for all user inputs
-- **HTTPS Enforcement**: All connections use secure protocols
-- **Content Security Policy**: CSP headers for XSS protection
-- **Regular Updates**: Automated dependency updates and security patches
+## 📋 Proses Penanganan
 
-### 🎯 **Scope**
+Setelah Anda melaporkan kerentanan:
 
-This security policy applies to:
+1. **Konfirmasi Penerimaan** (24-48 jam)
+   - Kami akan mengkonfirmasi penerimaan laporan Anda
 
-- ✅ The main website application (Next.js frontend)
-- ✅ API endpoints and server-side code
-- ✅ Third-party integrations and dependencies
-- ✅ Administrative interfaces
+2. **Investigasi Awal** (3-5 hari)
+   - Tim akan menginvestigasi dan memvalidasi kerentanan
+   - Kami mungkin meminta informasi tambahan
 
-**Out of Scope:**
-- ❌ Third-party services we use (e.g., Vercel, Sanity)
-- ❌ Physical security of our infrastructure
-- ❌ Social engineering attacks
-- ❌ Denial of service attacks
+3. **Pengembangan Perbaikan** (Tergantung severity)
+   - Critical: 1-7 hari
+   - High: 7-14 hari
+   - Medium: 14-30 hari
+   - Low: 30-90 hari
 
-### 🏆 **Security Recognition**
+4. **Rilis Patch**
+   - Patch akan dirilis setelah testing menyeluruh
+   - Security advisory akan dipublikasikan
 
-We appreciate the security community's help in keeping our platform safe. Eligible reporters may receive:
+5. **Pengakuan Publik**
+   - Kami akan mengakui kontribusi Anda (jika Anda menginginkannya)
+   - Nama Anda akan ditambahkan ke Hall of Fame
 
-- **Public Recognition**: Credit in our security advisories
-- **Swag**: MA Malnu merchandise (subject to availability)
-- **Certificate**: Digital certificate of appreciation
+## 🏆 Hall of Fame
 
-### 📚 **Security Best Practices**
+Kami berterima kasih kepada peneliti keamanan berikut yang telah membantu meningkatkan keamanan proyek ini:
 
-We follow these security best practices:
+<!-- Akan diupdate setelah ada laporan -->
+*Belum ada kontributor keamanan*
 
-1. **Regular Security Audits**: Monthly dependency and code reviews
-2. **Principle of Least Privilege**: Minimal access permissions
-3. **Secure Coding**: OWASP guidelines and security training
-4. **Incident Response**: Established procedures for security incidents
-5. **Continuous Monitoring**: Automated security scanning and alerts
+## 🛡️ Best Practices Keamanan
 
-### 🔧 **Development Security**
+### Untuk Kontributor
 
-Our development process includes:
+Saat berkontribusi, pastikan untuk:
 
-- **Pre-commit Hooks**: Security checks before code commits
-- **CI/CD Security**: Automated testing and vulnerability scanning
-- **Code Reviews**: Security-focused peer reviews
-- **Dependency Updates**: Automated and manual security patches
-- **Environment Security**: Isolated development and production environments
+- ✅ Tidak pernah commit credentials atau API keys
+- ✅ Gunakan environment variables untuk data sensitif
+- ✅ Validasi dan sanitasi semua input user
+- ✅ Gunakan HTTPS untuk semua komunikasi
+- ✅ Implementasikan rate limiting untuk API endpoints
+- ✅ Gunakan prepared statements untuk database queries
+- ✅ Implementasikan proper authentication dan authorization
+- ✅ Keep dependencies up to date
+- ✅ Review kode untuk kerentanan keamanan
 
-### 📞 **Emergency Contact**
+### Untuk Pengguna
 
-For **critical security issues** requiring immediate attention:
+Saat menggunakan website:
 
-- **Emergency Email**: emergency@malnu.sch.id
-- **Phone**: +62-XXX-XXXX-XXXX (during school hours)
-- **Available**: Monday - Friday, 07:00 - 15:00 WIB
+- ✅ Gunakan password yang kuat dan unik
+- ✅ Aktifkan 2FA jika tersedia
+- ✅ Jangan share credentials Anda
+- ✅ Logout setelah selesai menggunakan
+- ✅ Laporkan aktivitas mencurigakan
+- ✅ Keep browser Anda up to date
+
+## 🔐 Keamanan Dependencies
+
+Kami menggunakan tools berikut untuk menjaga keamanan dependencies:
+
+- **Dependabot**: Otomatis membuat PR untuk update dependencies
+- **npm audit**: Regular security audits
+- **Snyk**: Continuous security monitoring
+
+### Menjalankan Security Audit
+
+```bash
+# Check untuk vulnerabilities
+npm audit
+
+# Fix vulnerabilities otomatis
+npm audit fix
+
+# Fix dengan breaking changes
+npm audit fix --force
+```
+
+## 📚 Resources Keamanan
+
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [Next.js Security Best Practices](https://nextjs.org/docs/app/building-your-application/configuring/security)
+- [Sanity Security](https://www.sanity.io/docs/security)
+- [Node.js Security Best Practices](https://nodejs.org/en/docs/guides/security/)
+
+## 🔄 Update Kebijakan
+
+Kebijakan keamanan ini dapat berubah sewaktu-waktu. Perubahan signifikan akan dikomunikasikan melalui:
+
+- GitHub Security Advisories
+- Repository announcements
+- Email ke kontributor aktif
+
+## ⚖️ Disclosure Policy
+
+- Kami mengikuti **Responsible Disclosure** policy
+- Kami meminta waktu 90 hari sebelum disclosure publik
+- Kami akan bekerja sama dengan Anda untuk koordinasi disclosure
+- Kami tidak akan mengambil tindakan hukum terhadap peneliti yang mengikuti kebijakan ini
+
+## 📞 Kontak
+
+Untuk pertanyaan tentang kebijakan keamanan ini:
+
+- **Security Issues**: [GitHub Security Advisories](https://github.com/sulhicmz/website-ma-malnu/security/advisories)
+- **General Questions**: [GitHub Discussions](https://github.com/sulhicmz/website-ma-malnu/discussions)
 
 ---
 
-## 🤝 **Thank You**
+**Terima kasih telah membantu menjaga keamanan Website MA Malnu Kananga! 🙏**
 
-Thank you for helping keep the MA Malnu Kananga website safe and secure for our students, staff, and community.
-
-**Last Updated**: November 5, 2025  
-**Version**: 1.0  
-**Next Review**: February 5, 2026
+*Last Updated: 2025-11-05*
