@@ -49,6 +49,16 @@ function checkPrerequisites() {
     console.error('❌ Not in a git repository');
     process.exit(1);
   }
+
+  // Validate required branches exist locally
+  REQUIRED_BRANCHES.forEach(branch => {
+    try {
+      execSync(`git show-ref --verify --quiet refs/heads/${branch}`);
+      console.log(`✅ Required branch detected: ${branch}`);
+    } catch (error) {
+      console.log(`⚠️  Required branch missing locally: ${branch}`);
+    }
+  });
   
   try {
     // Check if authenticated with GitHub
@@ -272,9 +282,9 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { 
-  checkPrerequisites, 
-  getCurrentBranchProtection, 
+module.exports = {
+  checkPrerequisites,
+  getCurrentBranchProtection,
   verifyStatusChecks,
-  generateComplianceReport 
+  generateComplianceReport
 };
