@@ -1,4 +1,5 @@
 // src/app/profil/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 
@@ -33,12 +34,12 @@ export default async function ProfilPage() {
               MA Malnu Kananga didirikan pada tahun 1980 dengan tujuan memberikan 
               pendidikan berkualitas berbasis nilai-nilai agama.
             </p>
-            <a 
+            <Link 
               href="/profil/sejarah" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -47,12 +48,12 @@ export default async function ProfilPage() {
               Menjadi lembaga pendidikan unggulan yang menghasilkan generasi berakhlak 
               mulia dan berprestasi.
             </p>
-            <a 
+            <Link 
               href="/profil/visi-misi" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -61,12 +62,12 @@ export default async function ProfilPage() {
               Fasilitas pembelajaran yang lengkap dan nyaman untuk mendukung proses 
               belajar mengajar yang optimal.
             </p>
-            <a 
+            <Link 
               href="/profil/fasilitas" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -75,12 +76,12 @@ export default async function ProfilPage() {
               Struktur organisasi yang jelas dan efektif untuk memastikan tata kelola 
               sekolah yang baik.
             </p>
-            <a 
+            <Link 
               href="/profil/struktur" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 // src/app/akademik/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 
@@ -33,12 +34,12 @@ export default async function AkademikPage() {
               Kurikulum pendidikan yang diterapkan di MA Malnu Kananga mengacu pada standar 
               nasional yang telah ditetapkan oleh Kementerian Agama.
             </p>
-            <a 
+            <Link 
               href="/akademik/kurikulum" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -47,12 +48,12 @@ export default async function AkademikPage() {
               Program ekstrakurikuler yang beragam untuk mengembangkan bakat dan minat siswa 
               di bidang non-akademik.
             </p>
-            <a 
+            <Link 
               href="/akademik/ekstrakurikuler" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -61,12 +62,12 @@ export default async function AkademikPage() {
               Jadwal pelajaran yang terstruktur untuk memastikan proses pembelajaran berjalan 
               dengan efektif dan efisien.
             </p>
-            <a 
+            <Link 
               href="/akademik/jadwal" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -74,12 +75,12 @@ export default async function AkademikPage() {
             <p className="text-gray-700">
               Kalender akademik tahunan yang mencakup semua kegiatan penting selama tahun ajaran.
             </p>
-            <a 
+            <Link 
               href="/akademik/kalender" 
               className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Selengkapnya →
-            </a>
+            </Link>
           </div>
         </div>
       </div>

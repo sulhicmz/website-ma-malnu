@@ -1,4 +1,5 @@
 // src/app/prestasi/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 
@@ -41,12 +42,12 @@ export default async function PrestasiPage() {
               <p className="text-gray-700 mb-4">
                 Prestasi dalam bidang akademik seperti olimpiade, lomba matematika, dan lainnya.
               </p>
-              <a 
+              <Link 
                 href="/prestasi/akademik" 
                 className="inline-block text-blue-600 hover:text-blue-800 font-medium"
               >
                 Lihat Prestasi →
-              </a>
+              </Link>
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -54,12 +55,12 @@ export default async function PrestasiPage() {
               <p className="text-gray-700 mb-4">
                 Prestasi dalam bidang non-akademik seperti olahraga, seni, dan kepramukaan.
               </p>
-              <a 
+              <Link 
                 href="/prestasi/non-akademik" 
                 className="inline-block text-blue-600 hover:text-blue-800 font-medium"
               >
-                Lihat Prestasi →
-              </a>
+                Lihat Prestasi Non-Akademik →
+              </Link>
             </div>
           </div>
           

@@ -42,22 +42,22 @@ export default function Footer() {
               berakhlak mulia, dan berwawasan kebangsaan.
             </p>
             <div className="mt-6 flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white">
+              <Link href="#" className="text-gray-400 hover:text-white">
                 <span className="sr-only">Facebook</span>
                 <Facebook className="h-6 w-6" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              </Link>
+              <Link href="#" className="text-gray-400 hover:text-white">
                 <span className="sr-only">Instagram</span>
                 <Instagram className="h-6 w-6" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              </Link>
+              <Link href="#" className="text-gray-400 hover:text-white">
                 <span className="sr-only">Twitter</span>
                 <Twitter className="h-6 w-6" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              </Link>
+              <Link href="#" className="text-gray-400 hover:text-white">
                 <span className="sr-only">YouTube</span>
                 <Youtube className="h-6 w-6" />
-              </a>
+              </Link>
             </div>
           </div>
           

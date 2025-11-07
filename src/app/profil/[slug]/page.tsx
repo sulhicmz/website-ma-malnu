@@ -1,4 +1,5 @@
 // src/app/profil/[slug]/page.tsx
+import Link from 'next/link'
 import { getPage, getAllPageSlugs, getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 
@@ -44,12 +45,12 @@ export default async function ProfilPage({ params }: { params: { slug: string } 
             <p className="text-gray-600 mb-6">
               Maaf, halaman profil yang Anda cari tidak dapat ditemukan.
             </p>
-            <a 
+            <Link 
               href="/profil" 
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
               Kembali ke Profil
-            </a>
+            </Link>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { BookOpen, Users, Wifi, Utensils, Dumbbell, Microscope, Laptop, Music } from 'lucide-react'
 
@@ -116,18 +117,18 @@ export default function FacilitySection() {
               </div>
               
               <div className="mt-8 md:mt-0 md:w-1/3 flex flex-col sm:flex-row md:flex-col gap-4">
-                <a
+                <Link
                   href="/profil/fasilitas"
                   className="inline-block rounded-md border border-transparent bg-green-700 px-8 py-4 text-base font-medium text-white hover:bg-green-800 transition-colors text-center"
                 >
                   Lihat Semua Fasilitas
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/kontak"
                   className="inline-block rounded-md border border-green-700 bg-white px-8 py-4 text-base font-medium text-green-700 hover:bg-green-50 transition-colors text-center"
                 >
                   Jadwalkan Kunjungan
-                </a>
+                </Link>
               </div>
             </div>
           </div>

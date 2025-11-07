@@ -1,4 +1,5 @@
 // src/app/galeri/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 import { GalleryGrid } from '@/components'
@@ -39,12 +40,12 @@ export default async function GaleriPage() {
               <p className="text-gray-700 mb-4">
                 Kumpulan video dokumentasi kegiatan sekolah sepanjang tahun.
               </p>
-              <a 
+              <Link 
                 href="/galeri/video" 
                 className="inline-block text-blue-600 hover:text-blue-800 font-medium"
               >
                 Lihat Video →
-              </a>
+              </Link>
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -52,12 +53,12 @@ export default async function GaleriPage() {
               <p className="text-gray-700 mb-4">
                 Album khusus untuk kegiatan-kegiatan tertentu seperti perayaan hari besar.
               </p>
-              <a 
+              <Link 
                 href="/galeri/khusus" 
                 className="inline-block text-blue-600 hover:text-blue-800 font-medium"
               >
                 Lihat Album →
-              </a>
+              </Link>
             </div>
           </div>
         </div>

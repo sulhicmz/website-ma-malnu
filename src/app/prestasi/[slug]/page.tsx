@@ -1,4 +1,5 @@
 // src/app/prestasi/[slug]/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 
@@ -101,7 +102,7 @@ export default async function PrestasiDetailPage({ params }: { params: { slug: s
               </p>
               
               <p>
-                Dengan membawa tema "Pendidikan Karakter di Era Digital", tim kami berhasil meyakinkan dewan 
+                Dengan membawa tema &quot;Pendidikan Karakter di Era Digital&quot;, tim kami berhasil meyakinkan dewan 
                 juri dengan argumen yang kuat dan presentasi yang memukau. Prestasi ini merupakan bukti dari 
                 dedikasi dan kerja keras para siswa serta bimbingan dari para pelatih.
               </p>
@@ -115,7 +116,7 @@ export default async function PrestasiDetailPage({ params }: { params: { slug: s
           </div>
           
           <div className="mt-8 flex justify-between">
-            <a 
+            <Link 
               href="/prestasi" 
               className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
             >
@@ -123,7 +124,7 @@ export default async function PrestasiDetailPage({ params }: { params: { slug: s
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
               </svg>
               Kembali ke Prestasi
-            </a>
+            </Link>
           </div>
         </article>
       </div>

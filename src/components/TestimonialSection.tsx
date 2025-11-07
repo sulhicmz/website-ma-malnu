@@ -138,7 +138,7 @@ export default function TestimonialSection() {
               <div className="mt-6 relative">
                 <Quote className="h-8 w-8 text-green-200 absolute -top-4 -left-2" />
                 <p className="text-gray-600 italic pl-6">
-                  "{testimonial.content}"
+                  &quot;{testimonial.content}&quot;
                 </p>
               </div>
               
@@ -191,7 +191,7 @@ export default function TestimonialSection() {
               <div className="mt-6 relative">
                 <Quote className="h-8 w-8 text-green-200 absolute -top-4 -left-2" />
                 <p className="text-gray-600 italic pl-6">
-                  "{testimonials[currentTestimonial].content}"
+                  &quot;{testimonials[currentTestimonial].content}&quot;
                 </p>
               </div>
               

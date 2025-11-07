@@ -1,4 +1,5 @@
 // src/app/pengumuman/[slug]/page.tsx
+import Link from 'next/link'
 import { getPengumuman, getAllPengumumanSlugs, getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 
@@ -39,12 +40,12 @@ export default async function PengumumanDetailPage({ params }: { params: { slug:
             <p className="text-gray-600 mb-6">
               Maaf, pengumuman yang Anda cari tidak dapat ditemukan.
             </p>
-            <a 
+            <Link 
               href="/pengumuman" 
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
               Kembali ke Pengumuman
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -110,7 +111,7 @@ export default async function PengumumanDetailPage({ params }: { params: { slug:
           
           {pengumuman.document && (
             <div className="mt-8 pt-6 border-t border-gray-200">
-              <a 
+              <Link 
                 href={pengumuman.document} 
                 target="_blank"
                 rel="noopener noreferrer"
@@ -120,7 +121,7 @@ export default async function PengumumanDetailPage({ params }: { params: { slug:
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                 </svg>
                 Unduh Dokumen
-              </a>
+              </Link>
             </div>
           )}
         </article>

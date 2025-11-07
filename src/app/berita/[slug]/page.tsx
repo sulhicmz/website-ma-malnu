@@ -1,4 +1,5 @@
 // src/app/berita/[slug]/page.tsx
+import Link from 'next/link'
 import { getBerita, getAllBeritaSlugs, getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 
@@ -39,12 +40,12 @@ export default async function BeritaDetailPage({ params }: { params: { slug: str
             <p className="text-gray-600 mb-6">
               Maaf, berita yang Anda cari tidak dapat ditemukan.
             </p>
-            <a 
+            <Link 
               href="/berita" 
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
               Kembali ke Berita
-            </a>
+            </Link>
           </div>
         </div>
       </div>

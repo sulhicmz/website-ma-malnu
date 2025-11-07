@@ -1,4 +1,5 @@
 // src/app/search/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 
@@ -54,15 +55,15 @@ export default async function SearchPage({
           {query ? (
             <div>
               <p className="text-gray-600 mb-6">
-                Menampilkan hasil untuk: <span className="font-bold">"{query}"</span>
+                Menampilkan hasil untuk: <span className="font-bold">&quot;{query}&quot;</span>
               </p>
               
               <div className="space-y-6">
                 <div className="bg-white p-6 rounded-lg shadow-lg">
                   <h2 className="text-xl font-bold mb-2">
-                    <a href="/berita/judul-berita" className="text-blue-600 hover:text-blue-800">
+                    <Link href="/berita/judul-berita" className="text-blue-600 hover:text-blue-800">
                       Judul Berita yang Relevan dengan Pencarian
-                    </a>
+                    </Link>
                   </h2>
                   <p className="text-gray-600 text-sm mb-2">
                     12 April 2024 • Berita
@@ -74,9 +75,9 @@ export default async function SearchPage({
                 
                 <div className="bg-white p-6 rounded-lg shadow-lg">
                   <h2 className="text-xl font-bold mb-2">
-                    <a href="/pengumuman/judul-pengumuman" className="text-blue-600 hover:text-blue-800">
+                    <Link href="/pengumuman/judul-pengumuman" className="text-blue-600 hover:text-blue-800">
                       Judul Pengumuman yang Relevan dengan Pencarian
-                    </a>
+                    </Link>
                   </h2>
                   <p className="text-gray-600 text-sm mb-2">
                     10 April 2024 • Pengumuman

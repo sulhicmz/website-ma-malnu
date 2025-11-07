@@ -1,4 +1,5 @@
 // src/app/kontak/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 import WhatsAppButton from '@/components/WhatsAppButton'
@@ -169,12 +170,12 @@ export default async function KontakPage() {
                 title="Lokasi MA Malnu Kananga"
                 height="300px"
               />
-              <a 
+              <Link 
                 href="/kontak/lokasi" 
                 className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium"
               >
                 Lihat detail lokasi →
-              </a>
+              </Link>
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -182,12 +183,12 @@ export default async function KontakPage() {
               <p className="text-gray-700 mb-4">
                 Pertanyaan yang sering diajukan oleh orang tua siswa dan calon siswa.
               </p>
-              <a 
+              <Link 
                 href="/kontak/faq" 
                 className="inline-block text-blue-600 hover:text-blue-800 font-medium"
               >
                 Lihat FAQ →
-              </a>
+              </Link>
             </div>
           </div>
         </div>

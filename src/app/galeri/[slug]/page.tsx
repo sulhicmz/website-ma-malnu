@@ -1,4 +1,5 @@
 // src/app/galeri/[slug]/page.tsx
+import Link from 'next/link'
 import { getSiteSettings } from '@/lib/fetchData'
 import { Breadcrumb } from '@/components'
 
@@ -50,7 +51,7 @@ export default async function GaleriAlbumPage({ params }: { params: { slug: stri
           </div>
           
           <div className="mt-8 flex justify-between">
-            <a 
+            <Link 
               href="/galeri" 
               className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
             >
@@ -58,7 +59,7 @@ export default async function GaleriAlbumPage({ params }: { params: { slug: stri
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
               </svg>
               Kembali ke Galeri
-            </a>
+            </Link>
           </div>
         </article>
       </div>
