@@ -29,7 +29,7 @@ export default async function SearchPage({
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-8 text-center">Hasil Pencarian</h1>

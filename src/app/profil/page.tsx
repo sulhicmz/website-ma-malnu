@@ -23,7 +23,7 @@ export default async function ProfilPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <h1 className="text-3xl font-bold mb-8 text-center">Profil Sekolah</h1>
         

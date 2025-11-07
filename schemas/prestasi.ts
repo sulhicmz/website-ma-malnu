@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'prestasi',
@@ -69,7 +69,7 @@ export default defineType({
       title: 'Peserta/Pemenang',
       type: 'array',
       of: [
-        {
+        defineArrayMember({
           type: 'object',
           fields: [
             defineField({
@@ -107,35 +107,35 @@ export default defineType({
               }
             },
           },
-        },
+        }),
       ],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'description',
       title: 'Deskripsi Prestasi',
       type: 'array',
       of: [
-        { type: 'block' },
-        {
+        defineArrayMember({ type: 'block' }),
+        defineArrayMember({
           type: 'image',
           options: { hotspot: true },
-        },
+        }),
       ],
       validation: (Rule) => Rule.required(),
-    }),
+    }, {strict: false}),
     defineField({
       name: 'images',
       title: 'Dokumentasi',
       type: 'array',
       of: [
-        {
+        defineArrayMember({
           type: 'image',
           options: {
             hotspot: true,
           },
-        },
+        }),
       ],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'document',
       title: 'Dokumen Pendukung',

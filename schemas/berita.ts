@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'berita',
@@ -47,36 +47,37 @@ export default defineType({
       title: 'Penulis',
       type: 'reference',
       to: [{ type: 'penulis' }],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'category',
       title: 'Kategori',
       type: 'reference',
       to: [{ type: 'kategori' }],
-    }),
+    }, {strict: false}),
     defineField({
       name: 'body',
       title: 'Konten Berita',
       type: 'array',
       of: [
-        { type: 'block' },
-        {
+        defineArrayMember({ type: 'block' }),
+        defineArrayMember({
           type: 'image',
           options: { hotspot: true },
-        },
-        { type: 'embed' },
+        }),
+        defineArrayMember({ type: 'embed' }),
       ],
       validation: (Rule) => Rule.required(),
-    }),
+    }, {strict: false}),
     defineField({
       name: 'tags',
       title: 'Tag',
       type: 'array',
-      of: [{ type: 'string' }],
+      of: [defineArrayMember({ type: 'string' }),
+],
       options: {
         layout: 'tags',
       },
-    }),
+    }, {strict: false}),
   ],
   preview: {
     select: {

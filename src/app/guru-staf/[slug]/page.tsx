@@ -61,7 +61,7 @@ export default async function GuruDetailPage({ params }: { params: { slug: strin
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <article className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">

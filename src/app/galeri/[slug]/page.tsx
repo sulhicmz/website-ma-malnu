@@ -34,7 +34,7 @@ export default async function GaleriAlbumPage({ params }: { params: { slug: stri
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <Breadcrumb breadcrumbs={breadcrumbs} />
+        <Breadcrumb items={breadcrumbs} />
         
         <article className="max-w-6xl mx-auto">
           <header className="mb-8 text-center">

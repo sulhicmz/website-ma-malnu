@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'ppdbSubmission',
@@ -80,7 +80,6 @@ export default defineType({
       name: 'alamat',
       title: 'Alamat',
       type: 'text',
-      rows: 3,
       group: 'siswa',
     }),
     defineField({
@@ -135,7 +134,6 @@ export default defineType({
       name: 'alamatSekolah',
       title: 'Alamat Sekolah',
       type: 'text',
-      rows: 3,
       group: 'siswa',
     }),
     defineField({
@@ -161,7 +159,7 @@ export default defineType({
         defineField({ name: 'ipa', title: 'IPA', type: 'number' }),
       ],
       group: 'siswa',
-    }),
+    }, {strict: false}),
     defineField({
       name: 'namaAyah',
       title: 'Nama Ayah',
@@ -292,7 +290,6 @@ export default defineType({
       name: 'alasanPilihan',
       title: 'Alasan Memilih Jurusan',
       type: 'text',
-      rows: 4,
       group: 'jurusan',
     }),
     defineField({
@@ -300,7 +297,7 @@ export default defineType({
       title: 'Dokumen Unggahan',
       type: 'array',
       of: [
-        defineField({
+        defineArrayMember({
           name: 'file',
           title: 'File',
           type: 'file',
@@ -330,6 +327,6 @@ export default defineType({
         }),
       ],
       group: 'dokumen',
-    }),
+    }, {strict: false}),
   ],
 })

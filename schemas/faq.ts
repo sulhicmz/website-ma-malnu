@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType, defineArrayMember } from 'sanity'
 
 export default defineType({
   name: 'faq',
@@ -16,14 +16,14 @@ export default defineType({
       title: 'Jawaban',
       type: 'array',
       of: [
-        { type: 'block' },
-        {
+        defineArrayMember({ type: 'block' }),
+        defineArrayMember({
           type: 'image',
           options: { hotspot: true },
-        },
+        }),
       ],
       validation: (Rule) => Rule.required(),
-    }),
+    }, {strict: false}),
     defineField({
       name: 'category',
       title: 'Kategori',
